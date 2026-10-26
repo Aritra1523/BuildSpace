@@ -515,14 +515,14 @@ export default function BuildSpaceLandingPage() {
                   {/* Creator Row */}
                   <div className="flex items-center gap-3">
                     <img
-                      src={activeProject.creator.avatar}
-                      alt={activeProject.creator.name}
+                      src={activeProject.creator?.avatar}
+                      alt={activeProject.creator?.name}
                       className="h-10 w-10 rounded-full object-cover ring-2 ring-violet-500"
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-white truncate">
-                          {activeProject.creator.name}
+                          {activeProject.creator?.name}
                         </span>
                         {activeProject.creator.openToWork && (
                           <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">

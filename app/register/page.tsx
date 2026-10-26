@@ -285,11 +285,12 @@
 //   );
 // }
 
+
 "use client";
 
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   Layers,
   Code2,
@@ -299,15 +300,10 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
-import {
-  getPostAuthRedirect,
-  normalizeAuthPayload,
-} from "@/lib/auth-redirect";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 function RegisterForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const initialRole =
     searchParams.get("role") === "recruiter" ? "recruiter" : "creator";
@@ -336,13 +332,13 @@ function RegisterForm() {
     const payload = {
       name,
       username: username || name.toLowerCase().replace(/[^a-z0-9]/g, ""),
-      email,
+      email: email.trim(),
       password,
       role,
       headline:
         headline ||
         (role === "recruiter"
-          ? `Talent Partner @ ${companyName || "Tech Startup"}`
+          ? `Talent Partner @ ${companyName || "Tech Company"}`
           : "Full-Stack Developer"),
       skills,
       companyName: role === "recruiter" ? companyName : undefined,
@@ -352,7 +348,7 @@ function RegisterForm() {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        credentials: "include", // Stores HTTP-only auth cookies automatically
         body: JSON.stringify(payload),
       });
 
@@ -361,42 +357,12 @@ function RegisterForm() {
         throw new Error(data?.error || data?.message || "Registration failed");
       }
 
-      const { user, profile, token } = normalizeAuthPayload(
-        { ...payload, ...data },
-        email,
-        role
-      );
-
-      if (token) localStorage.setItem("buildspace_token", token);
-      localStorage.setItem("buildspace_user", JSON.stringify(user));
-      localStorage.setItem("buildspace_profile", JSON.stringify(profile));
-
-      router.push(
-        getPostAuthRedirect({
-          role: user.role,
-          isNewUser: true,
-        })
-      );
+      // Guaranteed hard redirect to the OTP verification page
+      window.location.href = `/verify-email?email=${encodeURIComponent(
+        email.trim()
+      )}`;
     } catch (err: any) {
-      if (
-        err.message?.includes("Failed to fetch") ||
-        err.message?.includes("NetworkError")
-      ) {
-        const { user, profile } = normalizeAuthPayload(payload, email, role);
-        localStorage.setItem("buildspace_user", JSON.stringify(user));
-        localStorage.setItem("buildspace_profile", JSON.stringify(profile));
-
-        router.push(
-          getPostAuthRedirect({
-            role: user.role,
-            isNewUser: true,
-          })
-        );
-        return;
-      }
-
       setError(err.message || "Could not register account");
-    } finally {
       setLoading(false);
     }
   };
@@ -413,13 +379,13 @@ function RegisterForm() {
           </span>
         </Link>
         <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold text-cyan-300">
-          Project-First Network
+          Step 1 of 2 • Register
         </span>
       </div>
 
       <h1 className="text-2xl font-bold text-white">Create your BuildSpace account</h1>
       <p className="mt-1 text-xs text-slate-400">
-        Choose how you want to use BuildSpace.
+        Showcase your projects or hire top engineering talent.
       </p>
 
       {/* Role Selector */}
@@ -475,7 +441,7 @@ function RegisterForm() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Aritra Das"
+              placeholder="Rohan Das"
               className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none"
             />
           </div>
@@ -487,7 +453,7 @@ function RegisterForm() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="aritra1523"
+              placeholder="rohan_builds"
               className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none"
             />
           </div>
@@ -502,7 +468,7 @@ function RegisterForm() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@domain.com"
+            placeholder="rohan@domain.com"
             className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none"
           />
         </div>
@@ -532,7 +498,7 @@ function RegisterForm() {
                 type="text"
                 value={headline}
                 onChange={(e) => setHeadline(e.target.value)}
-                placeholder="Full-Stack Developer • React, Next.js & Node.js"
+                placeholder="Full-Stack MERN & Next.js Developer"
                 className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none"
               />
             </div>
@@ -544,42 +510,27 @@ function RegisterForm() {
                 type="text"
                 value={skillsInput}
                 onChange={(e) => setSkillsInput(e.target.value)}
-                placeholder="React, Next.js, TypeScript, Node.js, MongoDB"
                 className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none"
               />
             </div>
           </>
         ) : (
-          <>
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
-                Company Name
-              </label>
-              <div className="relative">
-                <Building2 className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
-                <input
-                  type="text"
-                  required
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="HyperScale Labs"
-                  className="w-full rounded-xl border border-white/15 bg-slate-950 py-2.5 pl-10 pr-4 text-sm text-white focus:border-cyan-500 focus:outline-none"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
-                Your Role / Title
-              </label>
+          <div>
+            <label className="block text-xs font-medium text-slate-300 mb-1">
+              Company Name
+            </label>
+            <div className="relative">
+              <Building2 className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
               <input
                 type="text"
-                value={headline}
-                onChange={(e) => setHeadline(e.target.value)}
-                placeholder="Lead Technical Recruiter"
-                className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2.5 text-sm text-white focus:border-cyan-500 focus:outline-none"
+                required
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="Acme Cloud Systems"
+                className="w-full rounded-xl border border-white/15 bg-slate-950 py-2.5 pl-10 pr-4 text-sm text-white focus:border-cyan-500 focus:outline-none"
               />
             </div>
-          </>
+          </div>
         )}
 
         <button
@@ -591,11 +542,7 @@ function RegisterForm() {
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <>
-              <span>
-                {role === "creator"
-                  ? "Create Creator Account & Enter Feed"
-                  : "Create Recruiter Account & Discover Talent"}
-              </span>
+              <span>Continue to Email Verification</span>
               <ArrowRight className="h-4 w-4" />
             </>
           )}
@@ -604,10 +551,7 @@ function RegisterForm() {
 
       <p className="mt-6 text-center text-xs text-slate-400">
         Already have an account?{" "}
-        <Link
-          href="/login"
-          className="font-semibold text-violet-400 hover:text-violet-300"
-        >
+        <Link href="/login" className="font-semibold text-violet-400 hover:text-violet-300">
           Sign in
         </Link>
       </p>
@@ -618,10 +562,6 @@ function RegisterForm() {
 export default function RegisterPage() {
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-[#07090E] px-4 py-12 text-slate-100">
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-32 right-1/3 h-96 w-96 rounded-full bg-violet-600/20 blur-[140px]" />
-        <div className="absolute bottom-0 left-1/4 h-96 w-96 rounded-full bg-cyan-500/15 blur-[140px]" />
-      </div>
       <Suspense fallback={<div className="text-slate-400">Loading...</div>}>
         <RegisterForm />
       </Suspense>

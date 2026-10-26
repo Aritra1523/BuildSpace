@@ -31,6 +31,7 @@ import {
   Search,
   Code2,
 } from "lucide-react";
+import Navbar from "@/component/Navbar/Navbar";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -96,25 +97,25 @@ function normalizeProject(raw: any, index = 0): ProjectReel {
     typeof raw?.creatorId === "string"
       ? raw.creatorId
       : raw?.creatorId?._id ||
-        creatorObj?.userId ||
-        creatorObj?._id ||
-        "creator_1";
+      creatorObj?.userId ||
+      creatorObj?._id ||
+      "unknown_creator";
 
   const rawViews = raw?.views;
   const viewsObj =
     typeof rawViews === "number"
       ? {
-          total: rawViews,
-          unique: rawViews,
-          creatorViews: Math.max(0, rawViews - 5),
-          recruiterViews: 5,
-        }
+        total: rawViews,
+        unique: rawViews,
+        creatorViews: Math.max(0, rawViews - 5),
+        recruiterViews: 5,
+      }
       : {
-          total: Number(rawViews?.total ?? raw?.viewsCount ?? 120),
-          unique: Number(rawViews?.unique ?? 95),
-          creatorViews: Number(rawViews?.creatorViews ?? 75),
-          recruiterViews: Number(rawViews?.recruiterViews ?? 20),
-        };
+        total: Number(rawViews?.total ?? raw?.viewsCount ?? 0),
+        unique: Number(rawViews?.unique ?? 0),
+        creatorViews: Number(rawViews?.creatorViews ?? 0),
+        recruiterViews: Number(rawViews?.recruiterViews ?? 0),
+      };
 
   return {
     _id: String(raw?._id || raw?.id || `proj_${index}`),
@@ -131,153 +132,27 @@ function normalizeProject(raw: any, index = 0): ProjectReel {
       raw?.thumbnail ||
       raw?.media?.[0]?.url ||
       "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1400&q=80",
-    githubUrl: raw?.githubUrl || "https://github.com",
-    liveDemoUrl: raw?.liveDemoUrl || "https://buildspace.dev",
-    likesCount: Number(raw?.likesCount ?? raw?.likes?.length ?? 24),
-    commentsCount: Number(raw?.commentsCount ?? raw?.comments?.length ?? 5),
-    savesCount: Number(raw?.savesCount ?? raw?.saves?.length ?? 12),
+    githubUrl: raw?.githubUrl,
+    liveDemoUrl: raw?.liveDemoUrl,
+    likesCount: Number(raw?.likesCount ?? raw?.likes?.length ?? 0),
+    commentsCount: Number(raw?.commentsCount ?? raw?.comments?.length ?? 0),
+    savesCount: Number(raw?.savesCount ?? raw?.saves?.length ?? 0),
     views: viewsObj,
     creator: {
       userId: String(creatorIdStr),
-      name: creatorObj?.name || "Aritra Das",
-      username: creatorObj?.username || "aritra1523",
+      name: creatorObj?.name || "Unknown Builder",
+      username: creatorObj?.username || "unknown",
       avatar:
         creatorObj?.avatar ||
         "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=250",
-      headline:
-        creatorObj?.headline ||
-        "Full-Stack Engineer • React, Next.js, Node.js & MongoDB",
-      location: creatorObj?.location || "India",
-      openToWork: creatorObj?.openToWork ?? true,
+      headline: creatorObj?.headline || "Builder",
+      location: creatorObj?.location,
+      openToWork: creatorObj?.openToWork ?? false,
     },
     isLiked: Boolean(raw?.isLiked),
     isSaved: Boolean(raw?.isSaved),
   };
 }
-
-// ============================================================================
-// FALLBACK SEEDED REELS
-// ============================================================================
-const INITIAL_REELS: ProjectReel[] = [
-  {
-    _id: "6717b2a9f1d2c34e56789021",
-    creatorId: "6717b2a9f1d2c34e56789010",
-    title: "Veloce — Distributed Flash-Sale E-Commerce Engine",
-    description:
-      "High-concurrency e-commerce platform built with React, Node.js, Redis Lua atomic stock locks, and MongoDB. Handles 25,000+ checkout requests/sec with zero overselling and live Socket.IO telemetry.",
-    category: "Full-Stack",
-    technologies: [
-      "React",
-      "Next.js",
-      "Node.js",
-      "TypeScript",
-      "MongoDB",
-      "Redis",
-    ],
-    thumbnail:
-      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1400&q=80",
-    githubUrl: "https://github.com/Aritra1523/veloce-commerce",
-    liveDemoUrl: "https://veloce-demo.buildspace.dev",
-    likesCount: 342,
-    commentsCount: 29,
-    savesCount: 94,
-    views: {
-      total: 4210,
-      unique: 3180,
-      creatorViews: 2600,
-      recruiterViews: 580,
-    },
-    creator: {
-      userId: "6717b2a9f1d2c34e56789010",
-      name: "Aritra Das",
-      username: "aritra1523",
-      avatar:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=250",
-      headline: "Full-Stack Engineer • React, Next.js, Node.js & MongoDB",
-      location: "Kolkata, India",
-      openToWork: true,
-    },
-    isLiked: false,
-    isSaved: false,
-  },
-  {
-    _id: "6717b2a9f1d2c34e56789022",
-    creatorId: "6717b2a9f1d2c34e56789010",
-    title: "QuickBite — Real-Time Multi-Role Food Delivery Platform",
-    description:
-      "Full-stack food ordering web application with customer ordering flow, restaurant owner live kitchen management, admin dashboard, and instant Socket.IO notifications.",
-    category: "Full-Stack",
-    technologies: [
-      "React",
-      "Next.js",
-      "TypeScript",
-      "Node.js",
-      "Express.js",
-      "MongoDB",
-      "Socket.IO",
-      "Tailwind CSS",
-    ],
-    thumbnail:
-      "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=1400&q=80",
-    githubUrl: "https://github.com/Aritra1523/quickbite-platform",
-    liveDemoUrl: "https://quickbite.buildspace.dev",
-    likesCount: 419,
-    commentsCount: 47,
-    savesCount: 138,
-    views: {
-      total: 5390,
-      unique: 4100,
-      creatorViews: 3290,
-      recruiterViews: 810,
-    },
-    creator: {
-      userId: "6717b2a9f1d2c34e56789010",
-      name: "Aritra Das",
-      username: "aritra1523",
-      avatar:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=250",
-      headline: "Full-Stack Engineer • React, Next.js, Node.js & MongoDB",
-      location: "Kolkata, India",
-      openToWork: true,
-    },
-    isLiked: false,
-    isSaved: false,
-  },
-  {
-    _id: "6717b2a9f1d2c34e56789023",
-    creatorId: "6717b2a9f1d2c34e56789011",
-    title: "HyperCanvas — Multiplayer WebGPU Shader & Vector Studio",
-    description:
-      "60FPS browser-based vector & WGSL shader editor compiled from Rust to WebAssembly with CRDT multiplayer cursor synchronization.",
-    category: "Graphics & WebGPU",
-    technologies: ["Rust", "WebAssembly", "WebGPU", "React", "TypeScript"],
-    thumbnail:
-      "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1400&q=80",
-    githubUrl: "https://github.com/mayalin-gpu/hypercanvas",
-    liveDemoUrl: "https://hypercanvas.buildspace.dev",
-    likesCount: 518,
-    commentsCount: 63,
-    savesCount: 204,
-    views: {
-      total: 6820,
-      unique: 5120,
-      creatorViews: 4210,
-      recruiterViews: 910,
-    },
-    creator: {
-      userId: "6717b2a9f1d2c34e56789011",
-      name: "Maya Lin",
-      username: "mayalin_gpu",
-      avatar:
-        "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=250",
-      headline: "Creative Technologist • WebGPU, Rust & Shaders",
-      location: "San Francisco, USA",
-      openToWork: true,
-    },
-    isLiked: false,
-    isSaved: false,
-  },
-];
 
 function ExploreFeedContent() {
   const router = useRouter();
@@ -286,28 +161,21 @@ function ExploreFeedContent() {
   // Safely read query params
   const onboardingMode = searchParams?.get("onboarding") || null;
 
-  // Auth User State (with safe defaults)
+  // Auth User State (Empty by default)
   const [currentUser, setCurrentUser] = useState<{
     _id: string;
     email: string;
     role: "creator" | "recruiter" | "admin";
-  }>({
-    _id: "6717b2a9f1d2c34e56789010",
-    email: "aritra@demo.dev",
-    role: "creator",
-  });
+  } | null>(null);
 
   const [currentProfile, setCurrentProfile] = useState<{
     name: string;
     username: string;
     avatar?: string;
-  }>({
-    name: "Aritra Das",
-    username: "aritra1523",
-  });
+  } | null>(null);
 
-  // Feed & Cursor Pagination State
-  const [projects, setProjects] = useState<ProjectReel[]>(INITIAL_REELS);
+  // Feed & Cursor Pagination State (Starts empty)
+  const [projects, setProjects] = useState<ProjectReel[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState<boolean>(false);
   const [selectedTech, setSelectedTech] = useState<string>("");
@@ -327,13 +195,15 @@ function ExploreFeedContent() {
   const [newComment, setNewComment] = useState<string>("");
 
   const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+
+  // UPDATED: Added file property to handle native file uploads
   const [uploadForm, setUploadForm] = useState({
     title: "",
     description: "",
     category: "Full-Stack",
-    technologies: "React, Next.js, TypeScript, Node.js, MongoDB",
-    thumbnail:
-      "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1400&q=80",
+    technologies: "",
+    file: null as File | null,
     githubUrl: "",
     liveDemoUrl: "",
   });
@@ -345,32 +215,32 @@ function ExploreFeedContent() {
     if (onboardingMode) setShowOnboarding(true);
   }, [onboardingMode]);
 
-  // Load logged-in user from localStorage or backend
+  // Load logged-in user purely from localStorage or backend (No hardcoded fallbacks)
   useEffect(() => {
     try {
       const savedUser = localStorage.getItem("buildspace_user");
       const savedProfile = localStorage.getItem("buildspace_profile");
       if (savedUser) {
         const parsedUser = JSON.parse(savedUser);
-        if (parsedUser) {
+        if (parsedUser && parsedUser._id) {
           setCurrentUser({
-            _id: parsedUser._id || parsedUser.id || "6717b2a9f1d2c34e56789010",
-            email: parsedUser.email || "aritra@demo.dev",
+            _id: parsedUser._id || parsedUser.id,
+            email: parsedUser.email,
             role: parsedUser.role || "creator",
           });
         }
       }
       if (savedProfile) {
         const parsedProfile = JSON.parse(savedProfile);
-        if (parsedProfile) {
+        if (parsedProfile && parsedProfile.name) {
           setCurrentProfile({
-            name: parsedProfile.name || "Aritra Das",
-            username: parsedProfile.username || "aritra1523",
+            name: parsedProfile.name,
+            username: parsedProfile.username,
             avatar: parsedProfile.avatar,
           });
         }
       }
-    } catch {}
+    } catch { }
 
     fetch(`${API_BASE}/api/auth/me`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
@@ -379,19 +249,19 @@ function ExploreFeedContent() {
         if (u && (u._id || u.id)) {
           setCurrentUser({
             _id: u._id || u.id,
-            email: u.email || "aritra@demo.dev",
+            email: u.email,
             role: u.role || "creator",
           });
         }
         if (data?.profile) {
           setCurrentProfile({
-            name: data.profile.name || "Aritra Das",
-            username: data.profile.username || "aritra1523",
+            name: data.profile.name,
+            username: data.profile.username,
             avatar: data.profile.avatar,
           });
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Fetch Vertical Feed with Cursor Pagination
@@ -426,9 +296,12 @@ function ExploreFeedContent() {
           );
           setNextCursor(data?.nextCursor || null);
           setHasMore(Boolean(data?.hasMore));
+        } else if (replace) {
+          setProjects([]);
+          setHasMore(false);
         }
       } catch {
-        // Fallback to INITIAL_REELS silently if backend is offline
+        // Leave projects unchanged on network failure
       }
     },
     [],
@@ -464,21 +337,21 @@ function ExploreFeedContent() {
                 prev.map((p) =>
                   p._id === projId
                     ? {
-                        ...p,
-                        views: {
-                          ...p.views,
-                          total: p.views.total + 1,
-                          unique: p.views.unique + 1,
-                          recruiterViews:
-                            userRole === "recruiter"
-                              ? p.views.recruiterViews + 1
-                              : p.views.recruiterViews,
-                          creatorViews:
-                            userRole !== "recruiter"
-                              ? p.views.creatorViews + 1
-                              : p.views.creatorViews,
-                        },
-                      }
+                      ...p,
+                      views: {
+                        ...p.views,
+                        total: p.views.total + 1,
+                        unique: p.views.unique + 1,
+                        recruiterViews:
+                          userRole === "recruiter"
+                            ? p.views.recruiterViews + 1
+                            : p.views.recruiterViews,
+                        creatorViews:
+                          userRole !== "recruiter"
+                            ? p.views.creatorViews + 1
+                            : p.views.creatorViews,
+                      },
+                    }
                     : p,
                 ),
               );
@@ -486,7 +359,7 @@ function ExploreFeedContent() {
               fetch(`${API_BASE}/api/projects/${projId}/view`, {
                 method: "POST",
                 credentials: "include",
-              }).catch(() => {});
+              }).catch(() => { });
             }
           }
         });
@@ -518,10 +391,10 @@ function ExploreFeedContent() {
       prev.map((p) =>
         p._id === project._id
           ? {
-              ...p,
-              isLiked: willLike,
-              likesCount: Math.max(0, p.likesCount + (willLike ? 1 : -1)),
-            }
+            ...p,
+            isLiked: willLike,
+            likesCount: Math.max(0, p.likesCount + (willLike ? 1 : -1)),
+          }
           : p,
       ),
     );
@@ -531,7 +404,7 @@ function ExploreFeedContent() {
         method: willLike ? "POST" : "DELETE",
         credentials: "include",
       });
-    } catch {}
+    } catch { }
   };
 
   const handleToggleSave = async (project: ProjectReel) => {
@@ -540,10 +413,10 @@ function ExploreFeedContent() {
       prev.map((p) =>
         p._id === project._id
           ? {
-              ...p,
-              isSaved: willSave,
-              savesCount: Math.max(0, p.savesCount + (willSave ? 1 : -1)),
-            }
+            ...p,
+            isSaved: willSave,
+            savesCount: Math.max(0, p.savesCount + (willSave ? 1 : -1)),
+          }
           : p,
       ),
     );
@@ -553,7 +426,7 @@ function ExploreFeedContent() {
         method: willSave ? "POST" : "DELETE",
         credentials: "include",
       });
-    } catch {}
+    } catch { }
   };
 
   const openMessageDrawer = (project: ProjectReel) => {
@@ -585,7 +458,7 @@ function ExploreFeedContent() {
           message: messageInput.trim(),
         }),
       });
-    } catch {}
+    } catch { }
 
     setToastMessage(
       `Message sent to ${messageTargetProject.creator?.name || "Creator"} with project context attached!`,
@@ -596,19 +469,7 @@ function ExploreFeedContent() {
 
   const openCommentsDrawer = async (project: ProjectReel) => {
     setCommentTargetProject(project);
-    setComments([
-      {
-        _id: "c1",
-        content: "Awesome architecture and real-time implementation!",
-        createdAt: "2h ago",
-        author: {
-          name: "Sarah Jenkins",
-          username: "sarah_talent",
-          avatar:
-            "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150",
-        },
-      },
-    ]);
+    setComments([]);
 
     try {
       const res = await fetch(
@@ -619,7 +480,7 @@ function ExploreFeedContent() {
         const list = Array.isArray(data?.comments) ? data.comments : [];
         if (list.length > 0) setComments(list);
       }
-    } catch {}
+    } catch { }
   };
 
   const handleAddComment = async (e: React.FormEvent) => {
@@ -659,60 +520,79 @@ function ExploreFeedContent() {
           body: JSON.stringify({ content: created.content }),
         },
       );
-    } catch {}
+    } catch { }
   };
 
+  // UPDATED: Project Creation Flow with Native Media Upload
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!uploadForm.file) {
+      setToastMessage("Please select a video or image file first.");
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+
+    setIsUploading(true);
     const techs = uploadForm.technologies
       .split(",")
       .map((t) => t.trim())
       .filter(Boolean);
 
-    const optimisticProject = normalizeProject({
-      _id: "proj_" + Date.now(),
-      creatorId: currentUser?._id,
-      title: uploadForm.title,
-      description: uploadForm.description,
-      category: uploadForm.category,
-      technologies: techs,
-      thumbnail: uploadForm.thumbnail,
-      githubUrl: uploadForm.githubUrl,
-      liveDemoUrl: uploadForm.liveDemoUrl,
-      creator: {
-        userId: currentUser?._id,
-        name: currentProfile?.name || "Aritra Das",
-        username: currentProfile?.username || "aritra1523",
-      },
-    });
-
     try {
-      const res = await fetch(`${API_BASE}/api/projects`, {
+      // 1. Upload the media file first
+      const formData = new FormData();
+      formData.append("file", uploadForm.file);
+
+      const uploadRes = await fetch(`${API_BASE}/api/uploads`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      if (!uploadRes.ok) throw new Error("Media upload failed");
+      const uploadData = await uploadRes.json();
+      const uploadedMediaUrl = uploadData.url;
+
+      // 2. Create the project with the returned media URL
+      const projectRes = await fetch(`${API_BASE}/api/projects`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          ...uploadForm,
+          title: uploadForm.title,
+          description: uploadForm.description,
+          category: uploadForm.category,
           technologies: techs,
+          thumbnail: uploadedMediaUrl,
+          githubUrl: uploadForm.githubUrl,
+          liveDemoUrl: uploadForm.liveDemoUrl,
           visibility: "public",
           status: "published",
         }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        const saved = normalizeProject(data?.project || data);
+
+      if (projectRes.ok) {
+        const projectData = await projectRes.json();
+        const saved = normalizeProject(projectData?.project || projectData);
         setProjects((prev) => [saved, ...prev]);
         setShowUploadModal(false);
+        setUploadForm({
+          title: "", description: "", category: "Full-Stack",
+          technologies: "", file: null, githubUrl: "", liveDemoUrl: ""
+        });
         setToastMessage("Project published to the vertical discovery feed!");
         setTimeout(() => setToastMessage(null), 4000);
-        return;
+      } else {
+        throw new Error("Failed to save project");
       }
-    } catch {}
-
-    setProjects((prev) => [optimisticProject, ...prev]);
-    setShowUploadModal(false);
-    setToastMessage("Project published to the vertical discovery feed!");
-    setTimeout(() => setToastMessage(null), 4000);
+    } catch (err: any) {
+      console.error(err);
+      setToastMessage(err.message || "Something went wrong during upload.");
+      setTimeout(() => setToastMessage(null), 3000);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -721,7 +601,7 @@ function ExploreFeedContent() {
         method: "POST",
         credentials: "include",
       });
-    } catch {}
+    } catch { }
     localStorage.removeItem("buildspace_token");
     localStorage.removeItem("buildspace_user");
     localStorage.removeItem("buildspace_profile");
@@ -824,11 +704,10 @@ function ExploreFeedContent() {
                   onClick={() =>
                     setSelectedTech((prev) => (prev === tech ? "" : tech))
                   }
-                  className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
-                    selectedTech === tech
+                  className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition ${selectedTech === tech
                       ? "border-violet-500 bg-violet-500/20 text-violet-200"
                       : "border-white/10 bg-white/5 text-slate-400 hover:text-white"
-                  }`}
+                    }`}
                 >
                   {tech}
                 </button>
@@ -854,29 +733,40 @@ function ExploreFeedContent() {
 
         {/* Logged-In User Footer */}
         <div className="border-t border-white/10 pt-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-600/30 font-bold text-violet-200 text-xs">
-              {(currentProfile?.name || "A")[0]}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-xs font-bold text-white">
-                {currentProfile?.name || "Aritra Das"}
+          {currentUser ? (
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-600/30 font-bold text-violet-200 text-xs">
+                {(currentProfile?.name || "U")[0].toUpperCase()}
               </div>
-              <div className="truncate text-[11px] text-slate-400">
-                @{currentProfile?.username || "aritra1523"} •{" "}
-                <span className="capitalize text-violet-400">
-                  {currentUser?.role || "creator"}
-                </span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-xs font-bold text-white">
+                  {currentProfile?.name || "Unknown User"}
+                </div>
+                <div className="truncate text-[11px] text-slate-400">
+                  @{currentProfile?.username || "unknown"} •{" "}
+                  <span className="capitalize text-violet-400">
+                    {currentUser.role || "creator"}
+                  </span>
+                </div>
               </div>
+              <button
+                onClick={handleLogout}
+                title="Log out"
+                className="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-rose-400 transition"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
             </div>
-            <button
-              onClick={handleLogout}
-              title="Log out"
-              className="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-rose-400 transition"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
-          </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <Link
+                href="/login"
+                className="rounded-lg border border-white/10 bg-white/5 py-2 text-center text-xs font-semibold text-white hover:bg-white/10 transition"
+              >
+                Sign In
+              </Link>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -899,7 +789,7 @@ function ExploreFeedContent() {
                 Math.min(filteredProjects.length - 1, activeIndex + 1),
               )
             }
-            disabled={activeIndex >= filteredProjects.length - 1}
+            disabled={activeIndex >= filteredProjects.length - 1 || filteredProjects.length === 0}
             className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-slate-900/80 text-white hover:bg-white/10 disabled:opacity-30 transition"
           >
             <ChevronDown className="h-5 w-5" />
@@ -908,184 +798,224 @@ function ExploreFeedContent() {
 
         {/* Snap Scroll Container */}
         <div className="h-screen w-full max-w-[540px] overflow-y-scroll snap-y snap-mandatory scroll-smooth">
-          {filteredProjects.map((project, index) => (
-            <div
-              key={project._id}
-              ref={(el) => {
-                cardRefs.current[index] = el;
-              }}
-              data-project-id={project._id}
-              data-index={index}
-              className="relative h-screen w-full snap-start snap-always flex items-center justify-center p-0 sm:p-4"
-            >
-              <div className="relative h-full w-full overflow-hidden sm:rounded-[28px] border border-white/15 bg-slate-950 shadow-2xl">
-                <img
-                  src={project.thumbnail}
-                  alt={project.title}
-                  className="h-full w-full object-cover object-center"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#04060A] via-[#04060A]/65 to-black/30" />
-
-                {/* Top Bar: Category & View Telemetry */}
-                <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
-                  <span className="rounded-full border border-violet-400/30 bg-violet-500/20 px-3 py-1 text-xs font-semibold text-violet-200 backdrop-blur-md">
-                    {project.category}
-                  </span>
-                  <div className="flex items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-3 py-1 text-xs text-slate-200 backdrop-blur-md">
-                    <Eye className="h-3.5 w-3.5 text-cyan-400" />
-                    <span>{project.views.total.toLocaleString()} views</span>
-                    <span className="text-emerald-400 font-semibold">
-                      • {project.views.recruiterViews} recruiters
-                    </span>
-                  </div>
-                </div>
-
-                {/* Right Vertical Action Rail */}
-                <div className="absolute right-4 bottom-40 flex flex-col items-center gap-4 z-20">
-                  <button
-                    onClick={() => handleToggleLike(project)}
-                    className="flex flex-col items-center gap-1"
-                  >
-                    <div
-                      className={`flex h-12 w-12 items-center justify-center rounded-full border backdrop-blur-md transition ${
-                        project.isLiked
-                          ? "border-rose-500 bg-rose-500/25 text-rose-400"
-                          : "border-white/15 bg-black/55 text-white hover:bg-white/15"
-                      }`}
-                    >
-                      <Heart
-                        className={`h-5 w-5 ${project.isLiked ? "fill-rose-400" : ""}`}
-                      />
-                    </div>
-                    <span className="text-xs font-semibold text-white">
-                      {project.likesCount}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => openCommentsDrawer(project)}
-                    className="flex flex-col items-center gap-1"
-                  >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white backdrop-blur-md hover:bg-white/15 transition">
-                      <MessageSquare className="h-5 w-5" />
-                    </div>
-                    <span className="text-xs font-semibold text-white">
-                      {project.commentsCount}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => handleToggleSave(project)}
-                    className="flex flex-col items-center gap-1"
-                  >
-                    <div
-                      className={`flex h-12 w-12 items-center justify-center rounded-full border backdrop-blur-md transition ${
-                        project.isSaved
-                          ? "border-amber-400 bg-amber-500/25 text-amber-300"
-                          : "border-white/15 bg-black/55 text-white hover:bg-white/15"
-                      }`}
-                    >
-                      <Bookmark
-                        className={`h-5 w-5 ${project.isSaved ? "fill-amber-300" : ""}`}
-                      />
-                    </div>
-                    <span className="text-xs font-semibold text-white">
-                      {project.savesCount}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      navigator.clipboard?.writeText(window.location.href);
-                      setToastMessage("Project link copied to clipboard!");
-                      setTimeout(() => setToastMessage(null), 2500);
-                    }}
-                    className="flex flex-col items-center gap-1"
-                  >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white backdrop-blur-md hover:bg-white/15 transition">
-                      <Share2 className="h-5 w-5" />
-                    </div>
-                    <span className="text-[11px] text-slate-300">Share</span>
-                  </button>
-                </div>
-
-                {/* Bottom Project & Creator Details */}
-                <div className="absolute bottom-0 left-0 right-0 p-6 pr-20 space-y-4 z-10">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={project.creator.avatar}
-                      alt={project.creator.name}
-                      className="h-11 w-11 rounded-full object-cover ring-2 ring-violet-500"
+          {filteredProjects.length === 0 ? (
+            <div className="flex h-full w-full items-center justify-center text-slate-400">
+              <div className="text-center space-y-4">
+                <Layers className="mx-auto h-12 w-12 text-slate-700" />
+                <p className="text-sm">No projects found in the feed.</p>
+                <button
+                  onClick={() => setShowUploadModal(true)}
+                  className="rounded-lg bg-violet-600/20 px-4 py-2 text-xs font-semibold text-violet-300 hover:bg-violet-600/30 transition"
+                >
+                  Be the first to upload
+                </button>
+              </div>
+            </div>
+          ) : (
+            filteredProjects.map((project, index) => (
+              <div
+                key={project._id}
+                ref={(el) => {
+                  cardRefs.current[index] = el;
+                }}
+                data-project-id={project._id}
+                data-index={index}
+                className="relative h-screen w-full snap-start snap-always flex items-center justify-center p-0 sm:p-4"
+              >
+                <div className="relative h-full w-full overflow-hidden sm:rounded-[28px] border border-white/15 bg-slate-950 shadow-2xl">
+                  {project.thumbnail.endsWith('.mp4') ? (
+                    <video
+                      src={project.thumbnail}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="h-full w-full object-cover object-center"
                     />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-white">
-                          {project.creator.name}
-                        </span>
-                        {project.creator.openToWork && (
-                          <span className="rounded-full border border-emerald-500/40 bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
-                            Open to Work
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-slate-300">
-                        @{project.creator.username}
-                      </div>
+                  ) : (
+                    <img
+                      src={project.thumbnail}
+                      alt={project.title}
+                      className="h-full w-full object-cover object-center"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#04060A] via-[#04060A]/65 to-black/30" />
+
+                  {/* Top Bar: Category & View Telemetry */}
+                  <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+                    <span className="rounded-full border border-violet-400/30 bg-violet-500/20 px-3 py-1 text-xs font-semibold text-violet-200 backdrop-blur-md">
+                      {project.category}
+                    </span>
+                    <div className="flex items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-3 py-1 text-xs text-slate-200 backdrop-blur-md">
+                      <Eye className="h-3.5 w-3.5 text-cyan-400" />
+                      <span>{project.views.total.toLocaleString()} views</span>
+                      <span className="text-emerald-400 font-semibold">
+                        • {project.views.recruiterViews} recruiters
+                      </span>
                     </div>
                   </div>
 
-                  <div>
-                    <h2 className="text-xl font-extrabold text-white leading-snug">
-                      {project.title}
-                    </h2>
-                    <p className="mt-1.5 line-clamp-3 text-xs text-slate-200 leading-relaxed">
-                      {project.description}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1.5">
-                    {project.technologies.map((tech) => (
-                      <span
-                        key={tech}
-                        className="rounded-md border border-white/15 bg-white/10 px-2.5 py-0.5 text-xs font-medium text-cyan-200 backdrop-blur-sm"
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Primary Reel CTAs */}
-                  <div className="grid grid-cols-3 gap-2.5 pt-1">
-                    <a
-                      href={project.liveDemoUrl || "#"}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/10 py-2.5 text-xs font-semibold text-white hover:bg-white/20 transition"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5 text-cyan-400" />
-                      <span>Live Demo</span>
-                    </a>
-                    <a
-                      href={project.githubUrl || "#"}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/10 py-2.5 text-xs font-semibold text-white hover:bg-white/20 transition"
-                    >
-                      <Code2 className="h-3.5 w-3.5" />
-                      <span>GitHub</span>
-                    </a>
+                  {/* Right Vertical Action Rail */}
+                  <div className="absolute right-4 bottom-40 flex flex-col items-center gap-4 z-20">
                     <button
-                      onClick={() => openMessageDrawer(project)}
-                      className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 py-2.5 text-xs font-bold text-white shadow-lg shadow-violet-600/30 hover:opacity-95 transition"
+                      onClick={() => handleToggleLike(project)}
+                      className="flex flex-col items-center gap-1"
                     >
-                      <Send className="h-3.5 w-3.5" />
-                      <span>Message Creator</span>
+                      <div
+                        className={`flex h-12 w-12 items-center justify-center rounded-full border backdrop-blur-md transition ${project.isLiked
+                            ? "border-rose-500 bg-rose-500/25 text-rose-400"
+                            : "border-white/15 bg-black/55 text-white hover:bg-white/15"
+                          }`}
+                      >
+                        <Heart
+                          className={`h-5 w-5 ${project.isLiked ? "fill-rose-400" : ""}`}
+                        />
+                      </div>
+                      <span className="text-xs font-semibold text-white">
+                        {project.likesCount}
+                      </span>
                     </button>
+
+                    <button
+                      onClick={() => openCommentsDrawer(project)}
+                      className="flex flex-col items-center gap-1"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white backdrop-blur-md hover:bg-white/15 transition">
+                        <MessageSquare className="h-5 w-5" />
+                      </div>
+                      <span className="text-xs font-semibold text-white">
+                        {project.commentsCount}
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => handleToggleSave(project)}
+                      className="flex flex-col items-center gap-1"
+                    >
+                      <div
+                        className={`flex h-12 w-12 items-center justify-center rounded-full border backdrop-blur-md transition ${project.isSaved
+                            ? "border-amber-400 bg-amber-500/25 text-amber-300"
+                            : "border-white/15 bg-black/55 text-white hover:bg-white/15"
+                          }`}
+                      >
+                        <Bookmark
+                          className={`h-5 w-5 ${project.isSaved ? "fill-amber-300" : ""}`}
+                        />
+                      </div>
+                      <span className="text-xs font-semibold text-white">
+                        {project.savesCount}
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        navigator.clipboard?.writeText(window.location.href);
+                        setToastMessage("Project link copied to clipboard!");
+                        setTimeout(() => setToastMessage(null), 2500);
+                      }}
+                      className="flex flex-col items-center gap-1"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white backdrop-blur-md hover:bg-white/15 transition">
+                        <Share2 className="h-5 w-5" />
+                      </div>
+                      <span className="text-[11px] text-slate-300">Share</span>
+                    </button>
+                  </div>
+
+                  {/* Bottom Project & Creator Details */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6 pr-20 space-y-4 z-10">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={project.creator.avatar}
+                        alt={project.creator.name}
+                        className="h-11 w-11 rounded-full object-cover ring-2 ring-violet-500"
+                      />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-white">
+                            {project.creator.name}
+                          </span>
+                          {project.creator.openToWork && (
+                            <span className="rounded-full border border-emerald-500/40 bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
+                              Open to Work
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-300">
+                          @{project.creator.username}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h2 className="text-xl font-extrabold text-white leading-snug">
+                        {project.title}
+                      </h2>
+                      <p className="mt-1.5 line-clamp-3 text-xs text-slate-200 leading-relaxed">
+                        {project.description}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {project.technologies.map((tech) => (
+                        <span
+                          key={tech}
+                          className="rounded-md border border-white/15 bg-white/10 px-2.5 py-0.5 text-xs font-medium text-cyan-200 backdrop-blur-sm"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Primary Reel CTAs */}
+                    <div className="grid grid-cols-3 gap-2.5 pt-1">
+                      {project.liveDemoUrl ? (
+                        <a
+                          href={project.liveDemoUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/10 py-2.5 text-xs font-semibold text-white hover:bg-white/20 transition"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5 text-cyan-400" />
+                          <span>Live Demo</span>
+                        </a>
+                      ) : (
+                        <div className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-semibold text-slate-500 cursor-not-allowed">
+                          <ExternalLink className="h-3.5 w-3.5 opacity-50" />
+                          <span>No Demo</span>
+                        </div>
+                      )}
+
+                      {project.githubUrl ? (
+                        <a
+                          href={project.githubUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/10 py-2.5 text-xs font-semibold text-white hover:bg-white/20 transition"
+                        >
+                          <Code2 className="h-3.5 w-3.5" />
+                          <span>GitHub</span>
+                        </a>
+                      ) : (
+                        <div className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-semibold text-slate-500 cursor-not-allowed">
+                          <Code2 className="h-3.5 w-3.5 opacity-50" />
+                          <span>No Repo</span>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={() => openMessageDrawer(project)}
+                        className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 py-2.5 text-xs font-bold text-white shadow-lg shadow-violet-600/30 hover:opacity-95 transition"
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                        <span>Message Creator</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </main>
 
@@ -1177,24 +1107,28 @@ function ExploreFeedContent() {
             </div>
 
             <div className="my-4 flex-1 space-y-3 overflow-y-auto pr-1">
-              {comments.map((c) => (
-                <div
-                  key={c._id}
-                  className="rounded-2xl border border-white/10 bg-slate-950/70 p-3.5 space-y-1.5"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white">
-                      {c.author?.name || "Builder"}
-                    </span>
-                    <span className="text-[10px] text-slate-500">
-                      {c.createdAt}
-                    </span>
+              {comments.length === 0 ? (
+                <div className="text-center text-slate-500 text-xs py-10">No comments yet.</div>
+              ) : (
+                comments.map((c) => (
+                  <div
+                    key={c._id}
+                    className="rounded-2xl border border-white/10 bg-slate-950/70 p-3.5 space-y-1.5"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-white">
+                        {c.author?.name || "Builder"}
+                      </span>
+                      <span className="text-[10px] text-slate-500">
+                        {c.createdAt}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      {c.content}
+                    </p>
                   </div>
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    {c.content}
-                  </p>
-                </div>
-              ))}
+                ))
+              )}
             </div>
 
             <form onSubmit={handleAddComment} className="flex gap-2">
@@ -1230,8 +1164,9 @@ function ExploreFeedContent() {
                 </h3>
               </div>
               <button
-                onClick={() => setShowUploadModal(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-white/10 hover:text-white"
+                onClick={() => !isUploading && setShowUploadModal(false)}
+                disabled={isUploading}
+                className="rounded-lg p-1 text-slate-400 hover:bg-white/10 hover:text-white disabled:opacity-50"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1279,6 +1214,7 @@ function ExploreFeedContent() {
                 </label>
                 <input
                   type="text"
+                  required
                   value={uploadForm.technologies}
                   onChange={(e) =>
                     setUploadForm({
@@ -1286,14 +1222,36 @@ function ExploreFeedContent() {
                       technologies: e.target.value,
                     })
                   }
+                  placeholder="React, Next.js, Node.js"
                   className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2 text-xs text-white"
+                />
+              </div>
+
+              {/* NATIVE FILE UPLOAD INPUT */}
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">
+                  Project Media (MP4 Video or Image)
+                </label>
+                <input
+                  type="file"
+                  required
+                  accept="video/mp4,image/*"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setUploadForm({
+                        ...uploadForm,
+                        file: e.target.files[0],
+                      });
+                    }
+                  }}
+                  className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2 text-xs text-slate-400 file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-violet-600/20 file:px-4 file:py-1.5 file:text-xs file:font-semibold file:text-violet-300 hover:file:bg-violet-600/30 transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-300 mb-1">
-                    GitHub URL
+                    GitHub URL (Optional)
                   </label>
                   <input
                     type="url"
@@ -1310,7 +1268,7 @@ function ExploreFeedContent() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-300 mb-1">
-                    Live Demo URL
+                    Live Demo URL (Optional)
                   </label>
                   <input
                     type="url"
@@ -1329,9 +1287,10 @@ function ExploreFeedContent() {
 
               <button
                 type="submit"
-                className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 py-3 text-xs font-bold text-white shadow-lg shadow-violet-600/30"
+                disabled={isUploading}
+                className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 py-3 text-xs font-bold text-white shadow-lg shadow-violet-600/30 disabled:opacity-50 transition"
               >
-                Publish to Vertical Feed
+                {isUploading ? "Uploading & Publishing..." : "Publish to Vertical Feed"}
               </button>
             </form>
           </div>
@@ -1381,6 +1340,7 @@ function ExploreFeedContent() {
 export default function ExplorePage() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-[#06080D]" />}>
+      <Navbar />
       <ExploreFeedContent />
     </Suspense>
   );
