@@ -638,137 +638,24 @@ function ExploreFeedContent() {
       {/* =====================================================================
           LEFT SIDEBAR: ROLE WORKSPACE & FILTERS
       ===================================================================== */}
-      <aside className="hidden w-72 shrink-0 flex-col justify-between border-r border-white/10 bg-[#080B12] p-5 md:flex">
-        <div className="space-y-5">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-cyan-500">
-              <Layers className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <span className="text-lg font-bold text-white">
-                Build<span className="text-violet-400">Space</span>
-              </span>
-              <span className="block text-[10px] font-mono uppercase text-emerald-400">
-                ● {currentUser?.role || "creator"} feed
-              </span>
-            </div>
-          </Link>
-
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search projects, stack, creator..."
-              className="w-full rounded-xl border border-white/10 bg-slate-950 py-2 pl-9 pr-3 text-xs text-white placeholder:text-slate-500 focus:border-violet-500 focus:outline-none"
-            />
-          </div>
-
-          {/* Primary Upload Project CTA */}
-          <button
-            onClick={() => setShowUploadModal(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-cyan-600 px-4 py-3 text-xs font-bold text-white shadow-lg shadow-violet-600/25 hover:opacity-95 transition"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Upload Project Reel</span>
-          </button>
-
-          {/* Stack Filters */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-              <span>Filter by Technology</span>
-              {selectedTech && (
-                <button
-                  onClick={() => setSelectedTech("")}
-                  className="text-violet-400 hover:underline"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {[
-                "React",
-                "Next.js",
-                "TypeScript",
-                "Node.js",
-                "MongoDB",
-                "Socket.IO",
-                "Rust",
-                "WebGPU",
-              ].map((tech) => (
-                <button
-                  key={tech}
-                  onClick={() =>
-                    setSelectedTech((prev) => (prev === tech ? "" : tech))
-                  }
-                  className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition ${selectedTech === tech
-                      ? "border-violet-500 bg-violet-500/20 text-violet-200"
-                      : "border-white/10 bg-white/5 text-slate-400 hover:text-white"
-                    }`}
-                >
-                  {tech}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Active Feed Instructions */}
-          <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-3.5 space-y-1.5 text-xs text-slate-300">
-            <div className="flex items-center gap-1.5 font-bold text-white">
-              <Sparkles className="h-3.5 w-3.5 text-violet-400" />
-              <span>Reels Discovery Mode</span>
-            </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Scroll vertically through live builds. Click{" "}
-              <span className="text-cyan-300 font-semibold">
-                Message Creator
-              </span>{" "}
-              to chat with the project automatically linked.
-            </p>
-          </div>
-        </div>
-
-        {/* Logged-In User Footer */}
-        <div className="border-t border-white/10 pt-4">
-          {currentUser ? (
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-600/30 font-bold text-violet-200 text-xs">
-                {(currentProfile?.name || "U")[0].toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-xs font-bold text-white">
-                  {currentProfile?.name || "Unknown User"}
-                </div>
-                <div className="truncate text-[11px] text-slate-400">
-                  @{currentProfile?.username || "unknown"} •{" "}
-                  <span className="capitalize text-violet-400">
-                    {currentUser.role || "creator"}
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={handleLogout}
-                title="Log out"
-                className="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-rose-400 transition"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
-            </div>
+     {/* Role-Aware Primary CTA */}
+          {currentUser?.role === "recruiter" ? (
+            <Link
+              href="/recruiter"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-cyan-600 px-4 py-3 text-xs font-bold text-white shadow-lg shadow-emerald-600/25 hover:opacity-95 transition"
+            >
+              <Briefcase className="h-4 w-4" />
+              <span>Recruiter Workspace & Jobs</span>
+            </Link>
           ) : (
-            <div className="flex flex-col gap-2">
-              <Link
-                href="/login"
-                className="rounded-lg border border-white/10 bg-white/5 py-2 text-center text-xs font-semibold text-white hover:bg-white/10 transition"
-              >
-                Sign In
-              </Link>
-            </div>
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-cyan-600 px-4 py-3 text-xs font-bold text-white shadow-lg shadow-violet-600/25 hover:opacity-95 transition"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Upload Project Reel</span>
+            </button>
           )}
-        </div>
-      </aside>
 
       {/* =====================================================================
           CENTER VERTICAL REELS FEED (scroll-snap-type: y mandatory)
