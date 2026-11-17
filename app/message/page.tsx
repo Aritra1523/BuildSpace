@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   Layers,
   Search,
@@ -18,12 +17,28 @@ import { useAuth } from "@/customHooks/profile/useProfile";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
+interface Conversation {
+  userId: string;
+  name: string;
+  avatar?: string;
+  unreadCount?: number;
+  lastMessageTime?: string;
+  lastMessage?: string;
+}
+
+interface ChatMessage {
+  _id: string;
+  senderId?: string;
+  receiverId?: string;
+  message: string;
+  createdAt: string;
+}
+
 export default function MessagesPage() {
-  const router = useRouter();
   const { user: currentUser, loading: authLoading } = useAuth(true);
-  const [conversations, setConversations] = useState<any[]>([]);
-  const [activeChat, setActiveChat] = useState<any | null>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeChat, setActiveChat] = useState<Conversation | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
 

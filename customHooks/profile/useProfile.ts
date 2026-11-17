@@ -65,8 +65,9 @@ export function useAuth(redirectToLogin = false) {
       if (data.user && data.user.isVerified === false) {
         router.push("/verify-email");
       }
-    } catch (err: any) {
-      setError(err.message || "Network error");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Network error";
+      setError(message || "Network error");
       setUser(null);
     } finally {
       setLoading(false);

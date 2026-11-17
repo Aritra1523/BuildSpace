@@ -102,8 +102,9 @@ function VerifyEmailContent() {
         router.push(getPostAuthRedirect({ role: verifiedRole, isNewUser: true }));
         router.refresh();
       }, 1200);
-    } catch (err: any) {
-      setError(err.message || "Verification failed");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Verification failed";
+      setError(message || "Verification failed");
     } finally {
       setLoading(false);
     }
@@ -172,8 +173,9 @@ function VerifyEmailContent() {
         setDevOtpHint(String(data.verificationToken));
       }
       setCooldown(60);
-    } catch (err: any) {
-      setError(err.message || "Failed to resend code");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to resend code";
+      setError(message || "Failed to resend code");
     } finally {
       setResending(false);
     }

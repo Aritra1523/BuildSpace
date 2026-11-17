@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, {
@@ -8,28 +9,31 @@ import React, {
   Suspense,
 } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   Layers,
   Heart,
   MessageSquare,
   Bookmark,
+  BookmarkCheck,
   Share2,
   ExternalLink,
   Eye,
   Send,
   Plus,
-  LogOut,
   CheckCircle2,
-  Sparkles,
   X,
   Rocket,
   ChevronUp,
   ChevronDown,
   Briefcase,
-  Users,
   Search,
   Code2,
+  Users,
+  UserPlus,
+  Check,
+  XCircle,
+  FolderGit2,
 } from "lucide-react";
 import Navbar from "@/component/Navbar/Navbar";
 
@@ -48,6 +52,14 @@ interface CreatorProfile {
   openToWork?: boolean;
 }
 
+interface CoBuilderItem {
+  userId: string;
+  name: string;
+  username: string;
+  avatar: string;
+  role: string;
+}
+
 interface ProjectReel {
   _id: string;
   creatorId: string;
@@ -58,6 +70,9 @@ interface ProjectReel {
   thumbnail: string;
   githubUrl?: string;
   liveDemoUrl?: string;
+  openToCollab?: boolean;
+  collabRoles?: string[];
+  coBuilders?: CoBuilderItem[];
   likesCount: number;
   commentsCount: number;
   savesCount: number;
@@ -83,85 +98,94 @@ interface CommentItem {
   };
 }
 
+interface CollaborationRequest {
+  _id: string;
+  status?: string;
+  [key: string]: unknown;
+}
+
 // ============================================================================
-// SAFE PROJECT NORMALIZER (Prevents 'Cannot read properties of undefined')
+// SAFE PROJECT NORMALIZER
 // ============================================================================
-function normalizeProject(raw: any, index = 0): ProjectReel {
+function normalizeProject(raw: Record<string, unknown> | null | undefined, index = 0): ProjectReel {
+  const input = (raw ?? {}) as Record<string, unknown>;
   const creatorObj =
-    raw?.creator ||
-    (typeof raw?.creatorId === "object" ? raw.creatorId : null) ||
-    (typeof raw?.author === "object" ? raw.author : null) ||
+    (input.creator as Record<string, unknown> | undefined) ||
+    (typeof input.creatorId === "object" && input.creatorId !== null
+      ? (input.creatorId as Record<string, unknown>)
+      : null) ||
+    (typeof input.author === "object" && input.author !== null
+      ? (input.author as Record<string, unknown>)
+      : null) ||
     {};
 
   const creatorIdStr =
-    typeof raw?.creatorId === "string"
-      ? raw.creatorId
-      : raw?.creatorId?._id ||
-      creatorObj?.userId ||
-      creatorObj?._id ||
-      "unknown_creator";
+    typeof input.creatorId === "string"
+      ? input.creatorId
+      : ((input.creatorId as Record<string, unknown> | null)?._id as string | undefined) ||
+        (creatorObj.userId as string | undefined) ||
+        (creatorObj._id as string | undefined) ||
+        "unknown_creator";
 
-  const rawViews = raw?.views;
+  const rawViews = input.views as Record<string, unknown> | number | undefined;
   const viewsObj =
     typeof rawViews === "number"
       ? {
-        total: rawViews,
-        unique: rawViews,
-        creatorViews: Math.max(0, rawViews - 5),
-        recruiterViews: 5,
-      }
+          total: rawViews,
+          unique: rawViews,
+          creatorViews: Math.max(0, rawViews - 5),
+          recruiterViews: 5,
+        }
       : {
-        total: Number(rawViews?.total ?? raw?.viewsCount ?? 0),
-        unique: Number(rawViews?.unique ?? 0),
-        creatorViews: Number(rawViews?.creatorViews ?? 0),
-        recruiterViews: Number(rawViews?.recruiterViews ?? 0),
-      };
+          total: Number((rawViews as Record<string, unknown> | undefined)?.total ?? input.viewsCount ?? 0),
+          unique: Number((rawViews as Record<string, unknown> | undefined)?.unique ?? 0),
+          creatorViews: Number((rawViews as Record<string, unknown> | undefined)?.creatorViews ?? 0),
+          recruiterViews: Number((rawViews as Record<string, unknown> | undefined)?.recruiterViews ?? 0),
+        };
 
   return {
-    _id: String(raw?._id || raw?.id || `proj_${index}`),
+    _id: String(input._id ?? input.id ?? `proj_${index}`),
     creatorId: String(creatorIdStr),
-    title: raw?.title || "Untitled BuildSpace Project",
+    title: (input.title as string | undefined) || "Untitled BuildSpace Project",
     description:
-      raw?.description ||
+      (input.description as string | undefined) ||
       "Full-stack application built with modern web technologies.",
-    category: raw?.category || "Full-Stack",
-    technologies: Array.isArray(raw?.technologies)
-      ? raw.technologies
+    category: (input.category as string | undefined) || "Full-Stack",
+    technologies: Array.isArray(input.technologies)
+      ? (input.technologies as string[])
       : ["React", "Next.js", "TypeScript", "Node.js"],
     thumbnail:
-      raw?.thumbnail ||
-      raw?.media?.[0]?.url ||
+      (input.thumbnail as string | undefined) ||
+      ((input.media as Array<Record<string, unknown>> | undefined)?.[0]?.url as string | undefined) ||
       "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1400&q=80",
-    githubUrl: raw?.githubUrl,
-    liveDemoUrl: raw?.liveDemoUrl,
-    likesCount: Number(raw?.likesCount ?? raw?.likes?.length ?? 0),
-    commentsCount: Number(raw?.commentsCount ?? raw?.comments?.length ?? 0),
-    savesCount: Number(raw?.savesCount ?? raw?.saves?.length ?? 0),
+    githubUrl: input.githubUrl as string | undefined,
+    liveDemoUrl: input.liveDemoUrl as string | undefined,
+    openToCollab: Boolean(input.openToCollab),
+    collabRoles: Array.isArray(input.collabRoles) ? (input.collabRoles as string[]) : [],
+    coBuilders: Array.isArray(input.coBuilders) ? (input.coBuilders as CoBuilderItem[]) : [],
+    likesCount: Number(input.likesCount ?? (input.likes as unknown[] | undefined)?.length ?? 0),
+    commentsCount: Number(input.commentsCount ?? (input.comments as unknown[] | undefined)?.length ?? 0),
+    savesCount: Number(input.savesCount ?? (input.saves as unknown[] | undefined)?.length ?? 0),
     views: viewsObj,
     creator: {
       userId: String(creatorIdStr),
-      name: creatorObj?.name || "Unknown Builder",
-      username: creatorObj?.username || "unknown",
+      name: (creatorObj.name as string | undefined) || "Unknown Builder",
+      username: (creatorObj.username as string | undefined) || "unknown",
       avatar:
-        creatorObj?.avatar ||
+        (creatorObj.avatar as string | undefined) ||
         "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=250",
-      headline: creatorObj?.headline || "Builder",
-      location: creatorObj?.location,
-      openToWork: creatorObj?.openToWork ?? false,
+      headline: (creatorObj.headline as string | undefined) || "Builder",
+      location: creatorObj.location as string | undefined,
+      openToWork: Boolean(creatorObj.openToWork),
     },
-    isLiked: Boolean(raw?.isLiked),
-    isSaved: Boolean(raw?.isSaved),
+    isLiked: Boolean(input.isLiked),
+    isSaved: Boolean(input.isSaved),
   };
 }
 
 function ExploreFeedContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Safely read query params
-  const onboardingMode = searchParams?.get("onboarding") || null;
-
-  // Auth User State (Empty by default)
   const [currentUser, setCurrentUser] = useState<{
     _id: string;
     email: string;
@@ -174,16 +198,14 @@ function ExploreFeedContent() {
     avatar?: string;
   } | null>(null);
 
-  // Feed & Cursor Pagination State (Starts empty)
   const [projects, setProjects] = useState<ProjectReel[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState<boolean>(false);
   const [selectedTech, setSelectedTech] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [collabFilterActive, setCollabFilterActive] = useState<boolean>(false);
   const [activeIndex, setActiveIndex] = useState<number>(0);
 
-  // Drawers & Modals
-  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [messageTargetProject, setMessageTargetProject] =
     useState<ProjectReel | null>(null);
   const [messageInput, setMessageInput] = useState<string>("");
@@ -194,10 +216,9 @@ function ExploreFeedContent() {
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [newComment, setNewComment] = useState<string>("");
 
+  // Upload Project Modal
   const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
   const [isUploading, setIsUploading] = useState<boolean>(false);
-
-  // UPDATED: Added file property to handle native file uploads
   const [uploadForm, setUploadForm] = useState({
     title: "",
     description: "",
@@ -206,23 +227,40 @@ function ExploreFeedContent() {
     file: null as File | null,
     githubUrl: "",
     liveDemoUrl: "",
+    openToCollab: false,
+    collabRoles: "",
   });
+
+  // Collaboration Request Modal & Hub State
+  const [collabApplyProject, setCollabApplyProject] =
+    useState<ProjectReel | null>(null);
+  const [collabRoleInput, setCollabRoleInput] = useState<string>("");
+  const [collabPitchInput, setCollabPitchInput] = useState<string>("");
+  const [collabProofProjectId, setCollabProofProjectId] = useState<string>("");
+
+  const [showCollabHubModal, setShowCollabHubModal] = useState<boolean>(false);
+  const [collabTab, setCollabTab] = useState<"incoming" | "sent">("incoming");
+  const [incomingCollabs, setIncomingCollabs] = useState<CollaborationRequest[]>([]);
+  const [sentCollabs, setSentCollabs] = useState<CollaborationRequest[]>([]);
 
   const viewedProjectIdsRef = useRef<Set<string>>(new Set());
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  useEffect(() => {
-    if (onboardingMode) setShowOnboarding(true);
-  }, [onboardingMode]);
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
 
-  // Load logged-in user purely from localStorage or backend (No hardcoded fallbacks)
+  const isUploadModalVisible =
+    showUploadModal || Boolean(searchParams?.get("upload") && currentUser?.role !== "recruiter");
+
   useEffect(() => {
     try {
       const savedUser = localStorage.getItem("buildspace_user");
       const savedProfile = localStorage.getItem("buildspace_profile");
       if (savedUser) {
         const parsedUser = JSON.parse(savedUser);
-        if (parsedUser && parsedUser._id) {
+        if (parsedUser && (parsedUser._id || parsedUser.id)) {
           setCurrentUser({
             _id: parsedUser._id || parsedUser.id,
             email: parsedUser.email,
@@ -264,19 +302,39 @@ function ExploreFeedContent() {
       .catch(() => { });
   }, []);
 
-  // Fetch Vertical Feed with Cursor Pagination
+  const fetchCollaborations = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/collaborations`, {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setIncomingCollabs(data.incoming || []);
+        setSentCollabs(data.sent || []);
+      }
+    } catch { }
+  }, []);
+
+  useEffect(() => {
+    if (currentUser) fetchCollaborations();
+  }, [currentUser, fetchCollaborations]);
+
   const fetchFeed = useCallback(
-    async (cursor?: string | null, techFilter?: string, replace = false) => {
+    async (
+      cursor?: string | null,
+      techFilter?: string,
+      collabFilter?: boolean,
+      replace = false
+    ) => {
       try {
         const params = new URLSearchParams({ limit: "10" });
         if (cursor) params.set("cursor", cursor);
         if (techFilter) params.set("tech", techFilter);
+        if (collabFilter) params.set("collab", "true");
 
         const res = await fetch(
           `${API_BASE}/api/feed/for-you?${params.toString()}`,
-          {
-            credentials: "include",
-          },
+          { credentials: "include" }
         );
         if (!res.ok) return;
         const data = await res.json();
@@ -288,11 +346,11 @@ function ExploreFeedContent() {
             : [];
 
         if (rawList.length > 0) {
-          const normalized = rawList.map((item: any, idx: number) =>
-            normalizeProject(item, idx),
+          const normalized = rawList.map((item, idx: number) =>
+            normalizeProject(item as Record<string, unknown>, idx)
           );
           setProjects((prev) =>
-            replace ? normalized : [...prev, ...normalized],
+            replace ? normalized : [...prev, ...normalized]
           );
           setNextCursor(data?.nextCursor || null);
           setHasMore(Boolean(data?.hasMore));
@@ -300,18 +358,15 @@ function ExploreFeedContent() {
           setProjects([]);
           setHasMore(false);
         }
-      } catch {
-        // Leave projects unchanged on network failure
-      }
+      } catch { }
     },
-    [],
+    []
   );
 
   useEffect(() => {
-    fetchFeed(null, selectedTech, true);
-  }, [selectedTech, fetchFeed]);
+    fetchFeed(null, selectedTech, collabFilterActive, true);
+  }, [selectedTech, collabFilterActive, fetchFeed]);
 
-  // IntersectionObserver for View Tracking + Cursor Pagination
   useEffect(() => {
     const userRole = currentUser?.role || "creator";
 
@@ -326,7 +381,12 @@ function ExploreFeedContent() {
               const idx = Number(idxAttr);
               setActiveIndex(idx);
               if (hasMore && nextCursor && idx >= projects.length - 2) {
-                fetchFeed(nextCursor, selectedTech, false);
+                fetchFeed(
+                  nextCursor,
+                  selectedTech,
+                  collabFilterActive,
+                  false
+                );
               }
             }
 
@@ -352,8 +412,8 @@ function ExploreFeedContent() {
                             : p.views.creatorViews,
                       },
                     }
-                    : p,
-                ),
+                    : p
+                )
               );
 
               fetch(`${API_BASE}/api/projects/${projId}/view`, {
@@ -364,7 +424,7 @@ function ExploreFeedContent() {
           }
         });
       },
-      { threshold: [0.6] },
+      { threshold: [0.6] }
     );
 
     cardRefs.current.forEach((el) => {
@@ -377,6 +437,7 @@ function ExploreFeedContent() {
     hasMore,
     nextCursor,
     selectedTech,
+    collabFilterActive,
     currentUser?.role,
     fetchFeed,
   ]);
@@ -395,8 +456,8 @@ function ExploreFeedContent() {
             isLiked: willLike,
             likesCount: Math.max(0, p.likesCount + (willLike ? 1 : -1)),
           }
-          : p,
-      ),
+          : p
+      )
     );
 
     try {
@@ -417,8 +478,8 @@ function ExploreFeedContent() {
             isSaved: willSave,
             savesCount: Math.max(0, p.savesCount + (willSave ? 1 : -1)),
           }
-          : p,
-      ),
+          : p
+      )
     );
 
     try {
@@ -429,6 +490,101 @@ function ExploreFeedContent() {
     } catch { }
   };
 
+  const handleQuickShortlist = async (project: ProjectReel) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/recruiter/shortlist`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          candidateId: project.creator.userId || project.creatorId,
+          projectId: project._id,
+          reason: `Shortlisted from vertical reel: "${project.title}" (${project.technologies.slice(0, 3).join(", ")})`,
+          stage: "Shortlisted",
+        }),
+      });
+      if (res.ok) {
+        showToast(
+          `Shortlisted ${project.creator.name} with "${project.title}" attached!`
+        );
+      }
+    } catch { }
+  };
+
+  // Open Structured Collaboration Application Modal
+  const openCollabModal = (project: ProjectReel) => {
+    setCollabApplyProject(project);
+    const defaultRole = project.collabRoles?.[0] || "Co-Builder";
+    setCollabRoleInput(defaultRole);
+    const firstName = (project.creator?.name || "Creator").split(" ")[0];
+    setCollabPitchInput(
+      `Hi ${firstName}! I saw you're looking for a ${defaultRole} on "${project.title
+        .split("—")[0]
+        .trim()}". I have experience with ${project.technologies
+          .slice(0, 3)
+          .join(", ")} and would love to co-build this with you!`
+    );
+  };
+
+  const handleSendCollabRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!collabApplyProject || !collabPitchInput.trim()) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/collaborations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          projectId: collabApplyProject._id,
+          roleApplied: collabRoleInput,
+          pitch: collabPitchInput.trim(),
+          ...(collabProofProjectId ? { proofProjectId: collabProofProjectId } : {}),
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast("Collaboration request sent with your Proof-of-Work!");
+        setCollabApplyProject(null);
+        fetchCollaborations();
+      } else {
+        showToast(data.error || "Could not send collaboration request");
+      }
+    } catch {
+      showToast("Error sending collaboration request");
+    }
+  };
+
+  // Accept or Decline Collaboration Request (PATCH /api/collaborations/:id)
+  const handleUpdateCollabStatus = async (
+    collabId: string,
+    status: "accepted" | "declined"
+  ) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/collaborations/${collabId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        showToast(
+          status === "accepted"
+            ? "Accepted! Co-Builder badge added to your Project Reel!"
+            : "Collaboration request declined."
+        );
+        fetchCollaborations();
+        fetchFeed(null, selectedTech, collabFilterActive, true);
+      } else {
+        showToast(data.error || "Failed to update status");
+      }
+    } catch {
+      showToast("Network error updating collaboration");
+    }
+  };
+
   const openMessageDrawer = (project: ProjectReel) => {
     const firstName = (project.creator?.name || "Creator").split(" ")[0];
     const topTech =
@@ -437,7 +593,7 @@ function ExploreFeedContent() {
     setMessageInput(
       `Hi ${firstName}, I discovered your ${project.title
         .split("—")[0]
-        .trim()} project on BuildSpace. I liked your ${topTech} implementation. We have a Full-Stack Developer opportunity. Would you be interested?`,
+        .trim()} project on BuildSpace. I liked your ${topTech} implementation. Let's connect!`
     );
   };
 
@@ -445,35 +601,48 @@ function ExploreFeedContent() {
     e.preventDefault();
     if (!messageTargetProject || !messageInput.trim()) return;
 
+    const receiverId =
+      messageTargetProject.creator?.userId || messageTargetProject.creatorId;
+
     try {
       await fetch(`${API_BASE}/api/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          receiverId:
-            messageTargetProject.creator?.userId ||
-            messageTargetProject.creatorId,
+          receiverId,
           projectId: messageTargetProject._id,
           message: messageInput.trim(),
         }),
       });
+
+      if (currentUser?.role === "recruiter") {
+        await fetch(`${API_BASE}/api/recruiter/shortlist`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            candidateId: receiverId,
+            projectId: messageTargetProject._id,
+            reason: `Contacted regarding project: ${messageTargetProject.title}`,
+            stage: "Contacted",
+          }),
+        });
+      }
     } catch { }
 
-    setToastMessage(
-      `Message sent to ${messageTargetProject.creator?.name || "Creator"} with project context attached!`,
+    showToast(
+      `Message sent to ${messageTargetProject.creator?.name || "Creator"} with project attached!`
     );
     setMessageTargetProject(null);
-    setTimeout(() => setToastMessage(null), 4000);
   };
 
   const openCommentsDrawer = async (project: ProjectReel) => {
     setCommentTargetProject(project);
     setComments([]);
-
     try {
       const res = await fetch(
-        `${API_BASE}/api/projects/${project._id}/comments`,
+        `${API_BASE}/api/projects/${project._id}/comments`
       );
       if (res.ok) {
         const data = await res.json();
@@ -505,8 +674,8 @@ function ExploreFeedContent() {
       prev.map((p) =>
         p._id === commentTargetProject._id
           ? { ...p, commentsCount: p.commentsCount + 1 }
-          : p,
-      ),
+          : p
+      )
     );
     setNewComment("");
 
@@ -518,18 +687,21 @@ function ExploreFeedContent() {
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ content: created.content }),
-        },
+        }
       );
     } catch { }
   };
 
-  // UPDATED: Project Creation Flow with Native Media Upload
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (currentUser?.role === "recruiter") {
+      showToast("Recruiters cannot upload projects. Post jobs in the Dashboard.");
+      return;
+    }
+
     if (!uploadForm.file) {
-      setToastMessage("Please select a video or image file first.");
-      setTimeout(() => setToastMessage(null), 3000);
+      showToast("Please select a video or image file first.");
       return;
     }
 
@@ -538,9 +710,12 @@ function ExploreFeedContent() {
       .split(",")
       .map((t) => t.trim())
       .filter(Boolean);
+    const collabRolesArr = uploadForm.collabRoles
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
 
     try {
-      // 1. Upload the media file first
       const formData = new FormData();
       formData.append("file", uploadForm.file);
 
@@ -554,7 +729,6 @@ function ExploreFeedContent() {
       const uploadData = await uploadRes.json();
       const uploadedMediaUrl = uploadData.url;
 
-      // 2. Create the project with the returned media URL
       const projectRes = await fetch(`${API_BASE}/api/projects`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -567,6 +741,8 @@ function ExploreFeedContent() {
           thumbnail: uploadedMediaUrl,
           githubUrl: uploadForm.githubUrl,
           liveDemoUrl: uploadForm.liveDemoUrl,
+          openToCollab: uploadForm.openToCollab,
+          collabRoles: collabRolesArr,
           visibility: "public",
           status: "published",
         }),
@@ -578,41 +754,40 @@ function ExploreFeedContent() {
         setProjects((prev) => [saved, ...prev]);
         setShowUploadModal(false);
         setUploadForm({
-          title: "", description: "", category: "Full-Stack",
-          technologies: "", file: null, githubUrl: "", liveDemoUrl: ""
+          title: "",
+          description: "",
+          category: "Full-Stack",
+          technologies: "",
+          file: null,
+          githubUrl: "",
+          liveDemoUrl: "",
+          openToCollab: false,
+          collabRoles: "",
         });
-        setToastMessage("Project published to the vertical discovery feed!");
-        setTimeout(() => setToastMessage(null), 4000);
+        showToast("Project published to the vertical discovery feed!");
       } else {
         throw new Error("Failed to save project");
       }
-    } catch (err: any) {
-      console.error(err);
-      setToastMessage(err.message || "Something went wrong during upload.");
-      setTimeout(() => setToastMessage(null), 3000);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Something went wrong during upload.";
+      showToast(message || "Something went wrong during upload.");
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await fetch(`${API_BASE}/api/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-    } catch { }
-    localStorage.removeItem("buildspace_token");
-    localStorage.removeItem("buildspace_user");
-    localStorage.removeItem("buildspace_profile");
-    router.push("/login");
-  };
+  const myOwnProjects = projects.filter(
+    (p) => currentUser && p.creatorId === currentUser._id
+  );
+  const pendingIncomingCount = incomingCollabs.filter(
+    (c) => c.status === "pending"
+  ).length;
 
   const filteredProjects = projects.filter((p) => {
     const matchesTech =
       !selectedTech ||
       p.technologies.some(
-        (t) => t.toLowerCase() === selectedTech.toLowerCase(),
+        (t) => t.toLowerCase() === selectedTech.toLowerCase()
       );
     const matchesSearch =
       !searchQuery.trim() ||
@@ -620,14 +795,13 @@ function ExploreFeedContent() {
       p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.creator.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.technologies.some((t) =>
-        t.toLowerCase().includes(searchQuery.toLowerCase()),
+        t.toLowerCase().includes(searchQuery.toLowerCase())
       );
     return matchesTech && matchesSearch;
   });
 
   return (
-    <div className="relative flex h-screen w-screen overflow-hidden bg-[#06080D] text-slate-100">
-      {/* Toast Notification */}
+    <div className="relative flex h-full w-full overflow-hidden bg-[#06080D] text-slate-100">
       {toastMessage && (
         <div className="fixed top-5 right-5 z-50 flex items-center gap-2.5 rounded-2xl border border-emerald-500/40 bg-slate-900/95 px-4 py-3 text-xs font-semibold text-emerald-300 shadow-2xl backdrop-blur-md">
           <CheckCircle2 className="h-4 w-4 text-emerald-400" />
@@ -636,32 +810,152 @@ function ExploreFeedContent() {
       )}
 
       {/* =====================================================================
-          LEFT SIDEBAR: ROLE WORKSPACE & FILTERS
+          LEFT SIDEBAR: WORKSPACE, COLLAB HUB, SEARCH & FILTERS
       ===================================================================== */}
-     {/* Role-Aware Primary CTA */}
+      <aside className="hidden md:flex w-72 shrink-0 flex-col justify-between border-r border-white/10 bg-[#080B12] p-5 overflow-y-auto">
+        <div className="space-y-6">
           {currentUser?.role === "recruiter" ? (
-            <Link
-              href="/recruiter"
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-cyan-600 px-4 py-3 text-xs font-bold text-white shadow-lg shadow-emerald-600/25 hover:opacity-95 transition"
-            >
-              <Briefcase className="h-4 w-4" />
-              <span>Recruiter Workspace & Jobs</span>
-            </Link>
+            <div className="space-y-2.5">
+              <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-400">
+                ● Recruiter Mode Active
+              </div>
+              <Link
+                href="/recruiter"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-cyan-600 px-4 py-3 text-xs font-bold text-white shadow-lg shadow-emerald-600/25 hover:opacity-95 transition"
+              >
+                <Briefcase className="h-4 w-4" />
+                <span>Recruiter Dashboard & Jobs</span>
+              </Link>
+            </div>
           ) : (
-            <button
-              onClick={() => setShowUploadModal(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-cyan-600 px-4 py-3 text-xs font-bold text-white shadow-lg shadow-violet-600/25 hover:opacity-95 transition"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Upload Project Reel</span>
-            </button>
+            <div className="space-y-2.5">
+              <button
+                onClick={() => setShowUploadModal(true)}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-cyan-600 px-4 py-3 text-xs font-bold text-white shadow-lg shadow-violet-600/25 hover:opacity-95 transition"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Upload Project Reel</span>
+              </button>
+
+              {/* Filter Feed for Collab Projects */}
+              <button
+                onClick={() => setCollabFilterActive(!collabFilterActive)}
+                className={`flex w-full items-center justify-center gap-2 rounded-xl border py-2.5 text-xs font-bold transition ${collabFilterActive
+                    ? "border-amber-400/50 bg-amber-500/20 text-amber-300"
+                    : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                  }`}
+              >
+                <UserPlus
+                  className={`h-4 w-4 ${collabFilterActive ? "text-amber-400" : "text-slate-400"
+                    }`}
+                />
+                <span>
+                  {collabFilterActive
+                    ? "Showing Collab Projects"
+                    : "Find Co-Builders & Collabs"}
+                </span>
+              </button>
+
+              {/* Open Collab Requests Hub (Accept / Decline Requests) */}
+              <button
+                onClick={() => {
+                  fetchCollaborations();
+                  setShowCollabHubModal(true);
+                }}
+                className="flex w-full items-center justify-between rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2.5 text-xs font-bold text-amber-200 hover:bg-amber-500/20 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-amber-400" />
+                  <span>Collab Requests Hub</span>
+                </div>
+                {pendingIncomingCount > 0 && (
+                  <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-extrabold text-slate-950">
+                    {pendingIncomingCount} new
+                  </span>
+                )}
+              </button>
+            </div>
           )}
 
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              Search Projects
+            </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Title, creator, or tech..."
+                className="w-full rounded-xl border border-white/10 bg-slate-950 py-2 pl-9 pr-3 text-xs text-white focus:border-violet-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Filter by Tech Stack
+              </span>
+              {selectedTech && (
+                <button
+                  onClick={() => setSelectedTech("")}
+                  className="text-[11px] text-violet-400 hover:underline"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                "React",
+                "Next.js",
+                "TypeScript",
+                "Node.js",
+                "MongoDB",
+                "Socket.IO",
+                "Tailwind CSS",
+              ].map((tech) => (
+                <button
+                  key={tech}
+                  onClick={() =>
+                    setSelectedTech((prev) => (prev === tech ? "" : tech))
+                  }
+                  className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition ${selectedTech.toLowerCase() === tech.toLowerCase()
+                      ? "border-violet-500 bg-violet-500/20 text-violet-200"
+                      : "border-white/10 bg-white/5 text-slate-400 hover:text-white"
+                    }`}
+                >
+                  {tech}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-1.5 border-t border-white/10 pt-4">
+            <Link
+              href="/message"
+              className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition"
+            >
+              <MessageSquare className="h-4 w-4 text-cyan-400" />
+              <span>Project-Linked Messages</span>
+            </Link>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-3.5 text-[11px] text-slate-400">
+          <div className="font-bold text-white mb-1">
+            Verified Co-Builder System
+          </div>
+          When you accept a collaboration request, your co-builder is automatically credited on the live project reel!
+        </div>
+      </aside>
+
       {/* =====================================================================
-          CENTER VERTICAL REELS FEED (scroll-snap-type: y mandatory)
+          CENTER VERTICAL REELS FEED
       ===================================================================== */}
-      <main className="relative flex-1 h-screen overflow-hidden flex justify-center bg-[#05070B]">
-        {/* Desktop Up/Down Reel Switcher */}
+      <main className="relative h-full flex-1 overflow-hidden flex justify-center bg-[#05070B]">
         <div className="hidden lg:flex fixed right-8 top-1/2 -translate-y-1/2 z-30 flex-col gap-2">
           <button
             onClick={() => scrollToReel(Math.max(0, activeIndex - 1))}
@@ -673,29 +967,40 @@ function ExploreFeedContent() {
           <button
             onClick={() =>
               scrollToReel(
-                Math.min(filteredProjects.length - 1, activeIndex + 1),
+                Math.min(filteredProjects.length - 1, activeIndex + 1)
               )
             }
-            disabled={activeIndex >= filteredProjects.length - 1 || filteredProjects.length === 0}
+            disabled={
+              activeIndex >= filteredProjects.length - 1 ||
+              filteredProjects.length === 0
+            }
             className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-slate-900/80 text-white hover:bg-white/10 disabled:opacity-30 transition"
           >
             <ChevronDown className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Snap Scroll Container */}
-        <div className="h-screen w-full max-w-[540px] overflow-y-scroll snap-y snap-mandatory scroll-smooth">
+        <div className="h-full w-full max-w-[540px] overflow-y-scroll snap-y snap-mandatory scroll-smooth">
           {filteredProjects.length === 0 ? (
-            <div className="flex h-full w-full items-center justify-center text-slate-400">
+            <div className="flex h-full w-full items-center justify-center text-slate-400 p-6">
               <div className="text-center space-y-4">
                 <Layers className="mx-auto h-12 w-12 text-slate-700" />
                 <p className="text-sm">No projects found in the feed.</p>
-                <button
-                  onClick={() => setShowUploadModal(true)}
-                  className="rounded-lg bg-violet-600/20 px-4 py-2 text-xs font-semibold text-violet-300 hover:bg-violet-600/30 transition"
-                >
-                  Be the first to upload
-                </button>
+                {currentUser?.role === "recruiter" ? (
+                  <Link
+                    href="/recruiter"
+                    className="inline-block rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white"
+                  >
+                    Go to Recruiter Dashboard
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => setShowUploadModal(true)}
+                    className="rounded-lg bg-violet-600/20 px-4 py-2 text-xs font-semibold text-violet-300 hover:bg-violet-600/30 transition"
+                  >
+                    Be the first to upload
+                  </button>
+                )}
               </div>
             </div>
           ) : (
@@ -707,28 +1012,35 @@ function ExploreFeedContent() {
                 }}
                 data-project-id={project._id}
                 data-index={index}
-                className="relative h-screen w-full snap-start snap-always flex items-center justify-center p-0 sm:p-4"
+                className="relative h-full w-full snap-start snap-always flex items-center justify-center p-0 sm:p-4"
               >
                 <div className="relative h-full w-full overflow-hidden sm:rounded-[28px] border border-white/15 bg-slate-950 shadow-2xl">
-                  {project.thumbnail.endsWith('.mp4') ? (
+                  {project.thumbnail && project.thumbnail.includes(".mp4") ? (
                     <video
                       src={project.thumbnail}
                       autoPlay
                       loop
                       muted
                       playsInline
-                      className="h-full w-full object-cover object-center"
+                      className="absolute inset-0 h-full w-full object-cover object-center"
                     />
                   ) : (
                     <img
-                      src={project.thumbnail}
+                      src={
+                        project.thumbnail ||
+                        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1400&q=80"
+                      }
                       alt={project.title}
-                      className="h-full w-full object-cover object-center"
+                      className="absolute inset-0 h-full w-full object-cover object-center"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1400&q=80";
+                      }}
                     />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#04060A] via-[#04060A]/65 to-black/30" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#04060A] via-[#04060A]/65 to-black/30 pointer-events-none" />
 
-                  {/* Top Bar: Category & View Telemetry */}
+                  {/* Top Bar: Category & Views */}
                   <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
                     <span className="rounded-full border border-violet-400/30 bg-violet-500/20 px-3 py-1 text-xs font-semibold text-violet-200 backdrop-blur-md">
                       {project.category}
@@ -740,6 +1052,41 @@ function ExploreFeedContent() {
                         • {project.views.recruiterViews} recruiters
                       </span>
                     </div>
+                  </div>
+
+                  {/* COLLABORATION BANNER & VERIFIED CO-BUILDERS */}
+                  <div className="absolute top-14 left-4 right-16 z-10 flex flex-wrap items-center gap-2">
+                    {project.openToCollab && (
+                      <div className="inline-flex items-center gap-1.5 rounded-xl border border-amber-400/40 bg-amber-500/20 px-3 py-1.5 backdrop-blur-md shadow-lg">
+                        <UserPlus className="h-3.5 w-3.5 text-amber-300" />
+                        <span className="text-[10px] font-bold uppercase text-amber-200">
+                          Open to Collab
+                          {project.collabRoles && project.collabRoles.length > 0
+                            ? `: ${project.collabRoles.join(", ")}`
+                            : ""}
+                        </span>
+                      </div>
+                    )}
+
+                    {project.coBuilders && project.coBuilders.length > 0 && (
+                      <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/40 bg-emerald-500/20 px-3 py-1 backdrop-blur-md">
+                        <div className="flex -space-x-1.5">
+                          {project.coBuilders.map((cb, i) => (
+                            <img
+                              key={i}
+                              src={cb.avatar}
+                              alt={cb.name}
+                              title={`${cb.name} (${cb.role})`}
+                              className="h-5 w-5 rounded-full object-cover ring-1 ring-emerald-400"
+                            />
+                          ))}
+                        </div>
+                        <span className="text-[10px] font-bold text-emerald-200">
+                          +{project.coBuilders.length} Verified Co-Builder
+                          {project.coBuilders.length > 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Right Vertical Action Rail */}
@@ -755,7 +1102,8 @@ function ExploreFeedContent() {
                           }`}
                       >
                         <Heart
-                          className={`h-5 w-5 ${project.isLiked ? "fill-rose-400" : ""}`}
+                          className={`h-5 w-5 ${project.isLiked ? "fill-rose-400" : ""
+                            }`}
                         />
                       </div>
                       <span className="text-xs font-semibold text-white">
@@ -786,7 +1134,8 @@ function ExploreFeedContent() {
                           }`}
                       >
                         <Bookmark
-                          className={`h-5 w-5 ${project.isSaved ? "fill-amber-300" : ""}`}
+                          className={`h-5 w-5 ${project.isSaved ? "fill-amber-300" : ""
+                            }`}
                         />
                       </div>
                       <span className="text-xs font-semibold text-white">
@@ -794,22 +1143,35 @@ function ExploreFeedContent() {
                       </span>
                     </button>
 
+                    {currentUser?.role === "recruiter" && (
+                      <button
+                        onClick={() => handleQuickShortlist(project)}
+                        className="flex flex-col items-center gap-1"
+                      >
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-emerald-500/40 bg-emerald-500/20 text-emerald-300 backdrop-blur-md">
+                          <BookmarkCheck className="h-5 w-5" />
+                        </div>
+                        <span className="text-[11px] font-semibold text-emerald-300">
+                          Shortlist
+                        </span>
+                      </button>
+                    )}
+
                     <button
                       onClick={() => {
                         navigator.clipboard?.writeText(window.location.href);
-                        setToastMessage("Project link copied to clipboard!");
-                        setTimeout(() => setToastMessage(null), 2500);
+                        showToast("Project link copied to clipboard!");
                       }}
                       className="flex flex-col items-center gap-1"
                     >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white backdrop-blur-md hover:bg-white/15 transition">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white backdrop-blur-md">
                         <Share2 className="h-5 w-5" />
                       </div>
                       <span className="text-[11px] text-slate-300">Share</span>
                     </button>
                   </div>
 
-                  {/* Bottom Project & Creator Details */}
+                  {/* Bottom Project Details */}
                   <div className="absolute bottom-0 left-0 right-0 p-6 pr-20 space-y-4 z-10">
                     <div className="flex items-center gap-3">
                       <img
@@ -873,7 +1235,19 @@ function ExploreFeedContent() {
                         </div>
                       )}
 
-                      {project.githubUrl ? (
+                      {/* FIXED COLLAB BUTTON LOGIC */}
+                      {project.openToCollab &&
+                        currentUser?.role !== "recruiter" &&
+                        currentUser?._id !== project.creator.userId &&
+                        currentUser?._id !== project.creatorId ? (
+                        <button
+                          onClick={() => openCollabModal(project)}
+                          className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-2.5 text-xs font-bold text-slate-950 shadow-lg hover:opacity-95 transition"
+                        >
+                          <UserPlus className="h-4 w-4" />
+                          <span>Join Collab</span>
+                        </button>
+                      ) : project.githubUrl ? (
                         <a
                           href={project.githubUrl}
                           target="_blank"
@@ -895,7 +1269,7 @@ function ExploreFeedContent() {
                         className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 py-2.5 text-xs font-bold text-white shadow-lg shadow-violet-600/30 hover:opacity-95 transition"
                       >
                         <Send className="h-3.5 w-3.5" />
-                        <span>Message Creator</span>
+                        <span>Message</span>
                       </button>
                     </div>
                   </div>
@@ -905,6 +1279,297 @@ function ExploreFeedContent() {
           )}
         </div>
       </main>
+
+      {/* =====================================================================
+          MODAL: APPLY TO COLLABORATE (WITH PROOF-OF-WORK PROJECT)
+      ===================================================================== */}
+      {collabApplyProject && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-amber-500/30 bg-slate-900 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2">
+                <UserPlus className="h-5 w-5 text-amber-400" />
+                <h3 className="text-base font-bold text-white">
+                  Request to Co-Build
+                </h3>
+              </div>
+              <button
+                onClick={() => setCollabApplyProject(null)}
+                className="text-slate-400 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 space-y-1">
+              <div className="text-[10px] font-mono uppercase text-amber-300">
+                Target Project
+              </div>
+              <div className="text-xs font-bold text-white">
+                {collabApplyProject.title}
+              </div>
+            </div>
+
+            <form onSubmit={handleSendCollabRequest} className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">
+                  Role You Want to Fill
+                </label>
+                {collabApplyProject.collabRoles &&
+                  collabApplyProject.collabRoles.length > 0 ? (
+                  <select
+                    value={collabRoleInput}
+                    onChange={(e) => setCollabRoleInput(e.target.value)}
+                    className="w-full rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-xs text-white"
+                  >
+                    {collabApplyProject.collabRoles.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    required
+                    value={collabRoleInput}
+                    onChange={(e) => setCollabRoleInput(e.target.value)}
+                    placeholder="e.g. Frontend Engineer, UI/UX, Backend"
+                    className="w-full rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-xs text-white"
+                  />
+                )}
+              </div>
+
+              {myOwnProjects.length > 0 && (
+                <div>
+                  <label className="block text-xs font-medium text-amber-300 mb-1">
+                    Attach Your Shipped Project as Proof-of-Skill
+                  </label>
+                  <select
+                    value={collabProofProjectId}
+                    onChange={(e) => setCollabProofProjectId(e.target.value)}
+                    className="w-full rounded-xl border border-amber-500/30 bg-slate-950 px-3 py-2 text-xs text-white"
+                  >
+                    <option value="">
+                      Auto-attach my top BuildSpace project
+                    </option>
+                    {myOwnProjects.map((mp) => (
+                      <option key={mp._id} value={mp._id}>
+                        {mp.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">
+                  Your Collaboration Pitch
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  value={collabPitchInput}
+                  onChange={(e) => setCollabPitchInput(e.target.value)}
+                  className="w-full rounded-xl border border-white/15 bg-slate-950 p-3 text-xs text-white"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-3 text-xs font-bold text-slate-950 shadow-lg"
+              >
+                Send Collaboration Request
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
+          MODAL: COLLABORATION REQUESTS HUB (ACCEPT / DECLINE via PATCH)
+      ===================================================================== */}
+      {showCollabHubModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-white/15 bg-slate-900 p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div>
+                <h2 className="text-lg font-extrabold text-white">
+                  Creator Collaboration Hub
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Accepting a request automatically adds the developer as a Verified Co-Builder on your project reel.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowCollabHubModal(false)}
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex gap-2 border-b border-white/10 pb-3">
+              <button
+                onClick={() => setCollabTab("incoming")}
+                className={`rounded-xl px-4 py-2 text-xs font-bold transition ${collabTab === "incoming"
+                    ? "bg-amber-500 text-slate-950"
+                    : "bg-slate-800 text-slate-300"
+                  }`}
+              >
+                Incoming Requests ({incomingCollabs.length})
+              </button>
+              <button
+                onClick={() => setCollabTab("sent")}
+                className={`rounded-xl px-4 py-2 text-xs font-bold transition ${collabTab === "sent"
+                    ? "bg-amber-500 text-slate-950"
+                    : "bg-slate-800 text-slate-300"
+                  }`}
+              >
+                My Sent Requests ({sentCollabs.length})
+              </button>
+            </div>
+
+            {collabTab === "incoming" ? (
+              <div className="space-y-3">
+                {incomingCollabs.length === 0 ? (
+                  <div className="py-10 text-center text-xs text-slate-400">
+                    No incoming collaboration requests yet. Enable "Looking for Co-Builders" when uploading a project!
+                  </div>
+                ) : (
+                  incomingCollabs.map((req) => (
+                    <div
+                      key={req._id}
+                      className="rounded-2xl border border-white/10 bg-slate-950 p-4 space-y-3"
+                    >
+                      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={req.applicant?.avatar}
+                            alt={req.applicant?.name}
+                            className="h-10 w-10 rounded-full object-cover ring-2 ring-amber-500/40"
+                          />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-white">
+                                {req.applicant?.name}
+                              </span>
+                              <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-bold text-amber-300">
+                                Role: {req.roleApplied}
+                              </span>
+                            </div>
+                            <div className="text-xs text-slate-400">
+                              For your project:{" "}
+                              <strong className="text-white">
+                                {req.project?.title}
+                              </strong>
+                            </div>
+                          </div>
+                        </div>
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${req.status === "accepted"
+                              ? "bg-emerald-500/20 text-emerald-300"
+                              : req.status === "declined"
+                                ? "bg-rose-500/20 text-rose-300"
+                                : "bg-amber-500/20 text-amber-300"
+                            }`}
+                        >
+                          {req.status}
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        {req.pitch}
+                      </p>
+
+                      {/* Proof-of-Work Project Attached by Applicant */}
+                      {req.proofProject && (
+                        <div className="flex items-center justify-between rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-2.5 text-xs">
+                          <div className="flex items-center gap-2 text-cyan-200">
+                            <FolderGit2 className="h-4 w-4 text-cyan-400" />
+                            <span>
+                              Applicant's Proof-of-Work:{" "}
+                              <strong>{req.proofProject.title}</strong>
+                            </span>
+                          </div>
+                          {req.proofProject.liveDemoUrl && (
+                            <a
+                              href={req.proofProject.liveDemoUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-cyan-300 underline"
+                            >
+                              Inspect Build
+                            </a>
+                          )}
+                        </div>
+                      )}
+
+                      {req.status === "pending" && (
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            onClick={() =>
+                              handleUpdateCollabStatus(req._id, "accepted")
+                            }
+                            className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-500 transition"
+                          >
+                            <Check className="h-4 w-4" />
+                            <span>Accept & Add as Co-Builder</span>
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleUpdateCollabStatus(req._id, "declined")
+                            }
+                            className="flex items-center gap-1.5 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-xs font-bold text-rose-300 hover:bg-rose-500/20 transition"
+                          >
+                            <XCircle className="h-4 w-4" />
+                            <span>Decline</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {sentCollabs.length === 0 ? (
+                  <div className="py-10 text-center text-xs text-slate-400">
+                    You haven't sent any collaboration requests yet.
+                  </div>
+                ) : (
+                  sentCollabs.map((req) => (
+                    <div
+                      key={req._id}
+                      className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950 p-4"
+                    >
+                      <div>
+                        <div className="text-sm font-bold text-white">
+                          {req.project?.title || "Project"}
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          Role: {req.roleApplied} • Owner: {req.owner?.name}
+                        </div>
+                      </div>
+                      <span
+                        className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${req.status === "accepted"
+                            ? "bg-emerald-500/20 text-emerald-300"
+                            : req.status === "declined"
+                              ? "bg-rose-500/20 text-rose-300"
+                              : "bg-amber-500/20 text-amber-300"
+                          }`}
+                      >
+                        {req.status}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* =====================================================================
           CONTEXTUAL MESSAGE CREATOR DRAWER
@@ -925,7 +1590,7 @@ function ExploreFeedContent() {
                       Message {messageTargetProject.creator.name}
                     </h3>
                     <p className="text-xs text-emerald-400">
-                      ● Real-Time Socket.IO Channel
+                      ● Project-Linked Channel
                     </p>
                   </div>
                 </div>
@@ -939,8 +1604,7 @@ function ExploreFeedContent() {
 
               <div className="rounded-2xl border border-violet-500/30 bg-violet-500/10 p-3.5 space-y-1">
                 <div className="text-[10px] font-mono uppercase tracking-wider text-violet-300">
-                  Triggered from Project Reel (projectId:{" "}
-                  {messageTargetProject._id})
+                  Attached Project Context
                 </div>
                 <div className="text-sm font-bold text-white">
                   {messageTargetProject.title}
@@ -960,7 +1624,7 @@ function ExploreFeedContent() {
               />
               <button
                 type="submit"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 py-3 text-xs font-bold text-white shadow-lg shadow-violet-600/30"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 py-3 text-xs font-bold text-white shadow-lg"
               >
                 <Send className="h-4 w-4" />
                 <span>Send Message Without Leaving Feed</span>
@@ -995,7 +1659,9 @@ function ExploreFeedContent() {
 
             <div className="my-4 flex-1 space-y-3 overflow-y-auto pr-1">
               {comments.length === 0 ? (
-                <div className="text-center text-slate-500 text-xs py-10">No comments yet.</div>
+                <div className="text-center text-slate-500 text-xs py-10">
+                  No comments yet.
+                </div>
               ) : (
                 comments.map((c) => (
                   <div
@@ -1038,16 +1704,16 @@ function ExploreFeedContent() {
       )}
 
       {/* =====================================================================
-          UPLOAD PROJECT MODAL
+          UPLOAD PROJECT MODAL (WITH COLLABORATION SETTINGS)
       ===================================================================== */}
-      {showUploadModal && (
+      {isUploadModalVisible && currentUser?.role !== "recruiter" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-3xl border border-white/15 bg-slate-900 p-6 shadow-2xl space-y-4">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-white/15 bg-slate-900 p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
                 <Rocket className="h-5 w-5 text-violet-400" />
                 <h3 className="text-base font-bold text-white">
-                  Publish Project to BuildSpace Feed
+                  Publish Project
                 </h3>
               </div>
               <button
@@ -1059,164 +1725,169 @@ function ExploreFeedContent() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateProject} className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Project Title
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={uploadForm.title}
-                  onChange={(e) =>
-                    setUploadForm({ ...uploadForm, title: e.target.value })
-                  }
-                  placeholder="e.g. CloudPulse — Real-Time Kubernetes Monitor"
-                  className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2 text-xs text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Description
-                </label>
-                <textarea
-                  rows={3}
-                  required
-                  value={uploadForm.description}
-                  onChange={(e) =>
-                    setUploadForm({
-                      ...uploadForm,
-                      description: e.target.value,
-                    })
-                  }
-                  placeholder="Describe what you built and how it works..."
-                  className="w-full rounded-xl border border-white/15 bg-slate-950 p-3 text-xs text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Technologies (comma separated)
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={uploadForm.technologies}
-                  onChange={(e) =>
-                    setUploadForm({
-                      ...uploadForm,
-                      technologies: e.target.value,
-                    })
-                  }
-                  placeholder="React, Next.js, Node.js"
-                  className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2 text-xs text-white"
-                />
-              </div>
-
-              {/* NATIVE FILE UPLOAD INPUT */}
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Project Media (MP4 Video or Image)
-                </label>
-                <input
-                  type="file"
-                  required
-                  accept="video/mp4,image/*"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      setUploadForm({
-                        ...uploadForm,
-                        file: e.target.files[0],
-                      });
-                    }
-                  }}
-                  className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2 text-xs text-slate-400 file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-violet-600/20 file:px-4 file:py-1.5 file:text-xs file:font-semibold file:text-violet-300 hover:file:bg-violet-600/30 transition-all"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+            <form onSubmit={handleCreateProject} className="space-y-4">
+              <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-300 mb-1">
-                    GitHub URL (Optional)
+                    Project Title
                   </label>
                   <input
-                    type="url"
-                    value={uploadForm.githubUrl}
+                    type="text"
+                    required
+                    value={uploadForm.title}
                     onChange={(e) =>
-                      setUploadForm({
-                        ...uploadForm,
-                        githubUrl: e.target.value,
-                      })
+                      setUploadForm({ ...uploadForm, title: e.target.value })
                     }
-                    placeholder="https://github.com/..."
-                    className="w-full rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-xs text-white"
+                    placeholder="e.g. CloudPulse — Real-Time Monitor"
+                    className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2 text-xs text-white"
                   />
                 </div>
+
                 <div>
                   <label className="block text-xs font-medium text-slate-300 mb-1">
-                    Live Demo URL (Optional)
+                    Description
                   </label>
-                  <input
-                    type="url"
-                    value={uploadForm.liveDemoUrl}
+                  <textarea
+                    rows={2}
+                    required
+                    value={uploadForm.description}
                     onChange={(e) =>
                       setUploadForm({
                         ...uploadForm,
-                        liveDemoUrl: e.target.value,
+                        description: e.target.value,
                       })
                     }
-                    placeholder="https://..."
-                    className="w-full rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-xs text-white"
+                    className="w-full rounded-xl border border-white/15 bg-slate-950 p-3 text-xs text-white"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                    Technologies (comma separated)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={uploadForm.technologies}
+                    onChange={(e) =>
+                      setUploadForm({
+                        ...uploadForm,
+                        technologies: e.target.value,
+                      })
+                    }
+                    placeholder="React, Next.js, Node.js"
+                    className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2 text-xs text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={uploadForm.openToCollab}
+                    onChange={(e) =>
+                      setUploadForm({
+                        ...uploadForm,
+                        openToCollab: e.target.checked,
+                      })
+                    }
+                    className="rounded border-white/20 bg-slate-950 text-amber-500 h-4 w-4"
+                  />
+                  <span className="text-xs font-bold text-amber-400">
+                    Looking for Co-Builders? (Collab Mode)
+                  </span>
+                </label>
+
+                {uploadForm.openToCollab && (
+                  <div>
+                    <label className="block text-[11px] font-medium text-amber-200/70 mb-1">
+                      Roles Needed (comma separated)
+                    </label>
+                    <input
+                      type="text"
+                      required={uploadForm.openToCollab}
+                      value={uploadForm.collabRoles}
+                      onChange={(e) =>
+                        setUploadForm({
+                          ...uploadForm,
+                          collabRoles: e.target.value,
+                        })
+                      }
+                      placeholder="e.g. Frontend Developer, UI/UX Designer, AI Engineer"
+                      className="w-full rounded-xl border border-amber-500/40 bg-slate-950 px-3.5 py-2 text-xs text-white"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                    Project Media (MP4 Video or Image)
+                  </label>
+                  <input
+                    type="file"
+                    required
+                    accept="video/mp4,image/*"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setUploadForm({
+                          ...uploadForm,
+                          file: e.target.files[0],
+                        });
+                      }
+                    }}
+                    className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2 text-xs text-slate-400"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      GitHub URL
+                    </label>
+                    <input
+                      type="url"
+                      value={uploadForm.githubUrl}
+                      onChange={(e) =>
+                        setUploadForm({
+                          ...uploadForm,
+                          githubUrl: e.target.value,
+                        })
+                      }
+                      className="w-full rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Live Demo URL
+                    </label>
+                    <input
+                      type="url"
+                      value={uploadForm.liveDemoUrl}
+                      onChange={(e) =>
+                        setUploadForm({
+                          ...uploadForm,
+                          liveDemoUrl: e.target.value,
+                        })
+                      }
+                      className="w-full rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-xs text-white"
+                    />
+                  </div>
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={isUploading}
-                className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 py-3 text-xs font-bold text-white shadow-lg shadow-violet-600/30 disabled:opacity-50 transition"
+                className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 py-3 text-xs font-bold text-white shadow-lg disabled:opacity-50"
               >
-                {isUploading ? "Uploading & Publishing..." : "Publish to Vertical Feed"}
+                {isUploading
+                  ? "Uploading & Publishing..."
+                  : "Publish to Vertical Feed"}
               </button>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* =====================================================================
-          FIRST-TIME ONBOARDING WELCOME MODAL
-      ===================================================================== */}
-      {showOnboarding && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
-          <div className="w-full max-w-md rounded-3xl border border-violet-500/40 bg-slate-900 p-7 text-center shadow-2xl space-y-4">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/20 text-violet-300">
-              <Sparkles className="h-6 w-6" />
-            </div>
-            <h2 className="text-xl font-bold text-white">
-              Welcome to BuildSpace, {currentProfile?.name || "Builder"}!
-            </h2>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              You are now inside the vertical project discovery feed. Scroll
-              through live projects or upload your own build.
-            </p>
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={() => {
-                  setShowOnboarding(false);
-                  setShowUploadModal(true);
-                }}
-                className="flex-1 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 py-2.5 text-xs font-bold text-white"
-              >
-                Upload First Project
-              </button>
-              <button
-                onClick={() => setShowOnboarding(false)}
-                className="flex-1 rounded-xl border border-white/15 bg-white/5 py-2.5 text-xs font-semibold text-white hover:bg-white/10"
-              >
-                Explore Feed
-              </button>
-            </div>
           </div>
         </div>
       )}
@@ -1226,9 +1897,13 @@ function ExploreFeedContent() {
 
 export default function ExplorePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#06080D]" />}>
+    <div className="flex h-dvh flex-col bg-[#06080D]">
       <Navbar />
-      <ExploreFeedContent />
-    </Suspense>
+      <div className="min-h-0 flex-1">
+        <Suspense fallback={<div className="h-full bg-[#06080D]" />}>
+          <ExploreFeedContent />
+        </Suspense>
+      </div>
+    </div>
   );
 }

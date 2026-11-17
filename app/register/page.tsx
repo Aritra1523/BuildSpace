@@ -1,291 +1,3 @@
-// "use client";
-
-// import { useState } from "react";
-// import Link from "next/link";
-// import { useRouter } from "next/navigation";
-// import { useForm } from "react-hook-form";
-// import { zodResolver } from "@hookform/resolvers/zod";
-// import {
-//   ArrowRight,
-//   Eye,
-//   EyeOff,
-//   LoaderCircle,
-//   UserRound,
-//   Mail,
-//   LockKeyhole,
-// } from "lucide-react";
-
-// import { useAppDispatch, useAppSelector } from "@/redux/strore/hooks";
-// import { registerUser } from "@/redux/slice/auth/authSlice";
-// import { AuthShell } from "@/component/Auth/AuthShell";
-// import {
-//   RegisterFormData,
-//   registerSchema,
-// } from "@/shema/authSchema/RegisterSchema/RegisterSchema";
-
-// export default function RegisterPage() {
-//   const dispatch = useAppDispatch();
-//   const router = useRouter();
-//   const [showPassword, setShowPassword] = useState(false);
-
-//   const { status, error } = useAppSelector((state) => state.auth);
-//   const loading = status === "loading";
-
-//   const {
-//     register,
-//     handleSubmit,
-//     setValue,
-//     watch,
-//     formState: { errors },
-//   } = useForm<RegisterFormData>({
-//     resolver: zodResolver(registerSchema),
-//     defaultValues: {
-//       name: "",
-//       email: "",
-//       password: "",
-//       role: "creator",
-//     },
-//   });
-
-//   const selectedRole = watch("role");
-
-//   const onSubmit = async (data: RegisterFormData) => {
-//     const result = await dispatch(
-//       registerUser({
-//         name: data.name.trim(),
-//         email: data.email.trim(),
-//         password: data.password,
-//         role: data.role,
-//       }),
-//     );
-
-//     if (registerUser.fulfilled.match(result)) {
-//       router.push("/explore");
-//     }
-//   };
-
-//   const inputClass =
-//     "w-full rounded-xl border border-white/10 bg-black/20 py-3 pl-10 pr-4 text-sm outline-none transition placeholder:text-slate-600 focus:border-violet-400/60 focus:ring-2 focus:ring-violet-500/10";
-
-//   return (
-//     <AuthShell mode="register">
-//       <div className="rounded-3xl border border-white/10 bg-[#0c1019]/90 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8">
-//         <div className="mb-7">
-//           <p className="text-sm font-semibold text-violet-300">
-//             GET STARTED FOR FREE
-//           </p>
-
-//           <h2 className="mt-2 text-3xl font-bold tracking-tight">
-//             Create your account
-//           </h2>
-
-//           <p className="mt-2 text-sm leading-6 text-slate-400">
-//             Build your profile and put your projects in the spotlight.
-//           </p>
-//         </div>
-
-//         {error && (
-//           <div
-//             role="alert"
-//             className="mb-5 rounded-xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-200"
-//           >
-//             {error}
-//           </div>
-//         )}
-
-//         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-//           {/* Full name */}
-//           <div>
-//             <label
-//               htmlFor="name"
-//               className="mb-2 block text-sm font-medium text-slate-300"
-//             >
-//               Full name
-//             </label>
-
-//             <div className="relative">
-//               <UserRound className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-
-//               <input
-//                 id="name"
-//                 autoComplete="name"
-//                 placeholder="Your full name"
-//                 aria-invalid={!!errors.name}
-//                 {...register("name")}
-//                 className={inputClass}
-//               />
-//             </div>
-
-//             {errors.name && (
-//               <p className="mt-1.5 text-xs text-rose-300">
-//                 {errors.name.message}
-//               </p>
-//             )}
-//           </div>
-
-//           {/* Email */}
-//           <div>
-//             <label
-//               htmlFor="email"
-//               className="mb-2 block text-sm font-medium text-slate-300"
-//             >
-//               Email address
-//             </label>
-
-//             <div className="relative">
-//               <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-
-//               <input
-//                 id="email"
-//                 type="email"
-//                 autoComplete="email"
-//                 placeholder="you@example.com"
-//                 aria-invalid={!!errors.email}
-//                 {...register("email")}
-//                 className={inputClass}
-//               />
-//             </div>
-
-//             {errors.email && (
-//               <p className="mt-1.5 text-xs text-rose-300">
-//                 {errors.email.message}
-//               </p>
-//             )}
-//           </div>
-
-//           {/* Role selection */}
-//           <div>
-//             <label className="mb-2 block text-sm font-medium text-slate-300">
-//               I’m joining as
-//             </label>
-
-//             <div className="grid grid-cols-2 gap-3">
-//               <button
-//                 type="button"
-//                 aria-pressed={selectedRole === "creator"}
-//                 onClick={() =>
-//                   setValue("role", "creator", {
-//                     shouldValidate: true,
-//                     shouldDirty: true,
-//                   })
-//                 }
-//                 className={`rounded-xl border p-3 text-left transition ${
-//                   selectedRole === "creator"
-//                     ? "border-violet-400/60 bg-violet-500/10"
-//                     : "border-white/10 bg-black/20 hover:bg-white/5"
-//                 }`}
-//               >
-//                 <span className="block text-sm font-semibold">Creator</span>
-//                 <span className="mt-1 block text-xs text-slate-400">
-//                   Share projects
-//                 </span>
-//               </button>
-
-//               <button
-//                 type="button"
-//                 aria-pressed={selectedRole === "recruiter"}
-//                 onClick={() =>
-//                   setValue("role", "recruiter", {
-//                     shouldValidate: true,
-//                     shouldDirty: true,
-//                   })
-//                 }
-//                 className={`rounded-xl border p-3 text-left transition ${
-//                   selectedRole === "recruiter"
-//                     ? "border-cyan-400/60 bg-cyan-500/10"
-//                     : "border-white/10 bg-black/20 hover:bg-white/5"
-//                 }`}
-//               >
-//                 <span className="block text-sm font-semibold">Recruiter</span>
-//                 <span className="mt-1 block text-xs text-slate-400">
-//                   Discover talent
-//                 </span>
-//               </button>
-//             </div>
-
-//             {errors.role && (
-//               <p className="mt-1.5 text-xs text-rose-300">
-//                 {errors.role.message}
-//               </p>
-//             )}
-//           </div>
-
-//           {/* Password */}
-//           <div>
-//             <label
-//               htmlFor="password"
-//               className="mb-2 block text-sm font-medium text-slate-300"
-//             >
-//               Password
-//             </label>
-
-//             <div className="relative">
-//               <LockKeyhole className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-
-//               <input
-//                 id="password"
-//                 type={showPassword ? "text" : "password"}
-//                 autoComplete="new-password"
-//                 placeholder="At least 8 characters"
-//                 aria-invalid={!!errors.password}
-//                 {...register("password")}
-//                 className={`${inputClass} pr-12`}
-//               />
-
-//               <button
-//                 type="button"
-//                 onClick={() => setShowPassword((value) => !value)}
-//                 aria-label={showPassword ? "Hide password" : "Show password"}
-//                 className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-slate-500 hover:text-slate-200"
-//               >
-//                 {showPassword ? (
-//                   <EyeOff className="h-4 w-4" />
-//                 ) : (
-//                   <Eye className="h-4 w-4" />
-//                 )}
-//               </button>
-//             </div>
-
-//             {errors.password && (
-//               <p className="mt-1.5 text-xs text-rose-300">
-//                 {errors.password.message}
-//               </p>
-//             )}
-//           </div>
-
-//           <p className="text-xs leading-5 text-slate-500">
-//             By continuing, you agree to use BuildSpace respectfully and keep
-//             your account details secure.
-//           </p>
-
-//           <button
-//             disabled={loading}
-//             type="submit"
-//             className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-950/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-//           >
-//             {loading && <LoaderCircle className="h-4 w-4 animate-spin" />}
-
-//             {loading ? "Creating account..." : "Create account"}
-
-//             {!loading && <ArrowRight className="h-4 w-4" />}
-//           </button>
-//         </form>
-
-//         <div className="my-6 flex items-center gap-3 text-xs text-slate-600">
-//           <span className="h-px flex-1 bg-white/10" />
-//           SECURE BY DESIGN
-//           <span className="h-px flex-1 bg-white/10" />
-//         </div>
-
-//         <p className="text-center text-xs leading-5 text-slate-500">
-//           Your session is handled by secure HTTP-only cookies.
-//         </p>
-//       </div>
-//     </AuthShell>
-//   );
-// }
-
-
 "use client";
 
 import React, { useState, Suspense } from "react";
@@ -316,6 +28,10 @@ function RegisterForm() {
   const [headline, setHeadline] = useState("");
   const [skillsInput, setSkillsInput] = useState("React, Next.js, TypeScript, Node.js");
   const [companyName, setCompanyName] = useState("");
+
+  // NEW: Added Experience Level State
+  const [experienceLevel, setExperienceLevel] = useState("Fresher / Entry-Level");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -341,6 +57,7 @@ function RegisterForm() {
           ? `Talent Partner @ ${companyName || "Tech Company"}`
           : "Full-Stack Developer"),
       skills,
+      experienceLevel, // NEW: Sending experience level to the backend!
       companyName: role === "recruiter" ? companyName : undefined,
     };
 
@@ -361,8 +78,9 @@ function RegisterForm() {
       window.location.href = `/verify-email?email=${encodeURIComponent(
         email.trim()
       )}`;
-    } catch (err: any) {
-      setError(err.message || "Could not register account");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Could not register account";
+      setError(message || "Could not register account");
       setLoading(false);
     }
   };
@@ -393,11 +111,10 @@ function RegisterForm() {
         <button
           type="button"
           onClick={() => setRole("creator")}
-          className={`flex items-center gap-3 rounded-2xl border p-3.5 text-left transition ${
-            role === "creator"
-              ? "border-violet-500 bg-violet-500/15 text-white"
-              : "border-white/10 bg-slate-950/60 text-slate-400 hover:text-white"
-          }`}
+          className={`flex items-center gap-3 rounded-2xl border p-3.5 text-left transition ${role === "creator"
+            ? "border-violet-500 bg-violet-500/15 text-white"
+            : "border-white/10 bg-slate-950/60 text-slate-400 hover:text-white"
+            }`}
         >
           <Code2 className="h-5 w-5 text-violet-400 shrink-0" />
           <div>
@@ -409,11 +126,10 @@ function RegisterForm() {
         <button
           type="button"
           onClick={() => setRole("recruiter")}
-          className={`flex items-center gap-3 rounded-2xl border p-3.5 text-left transition ${
-            role === "recruiter"
-              ? "border-cyan-500 bg-cyan-500/15 text-white"
-              : "border-white/10 bg-slate-950/60 text-slate-400 hover:text-white"
-          }`}
+          className={`flex items-center gap-3 rounded-2xl border p-3.5 text-left transition ${role === "recruiter"
+            ? "border-cyan-500 bg-cyan-500/15 text-white"
+            : "border-white/10 bg-slate-950/60 text-slate-400 hover:text-white"
+            }`}
         >
           <Briefcase className="h-5 w-5 text-cyan-400 shrink-0" />
           <div>
@@ -488,19 +204,37 @@ function RegisterForm() {
           />
         </div>
 
+        {/* NEW: Experience Level Dropdown added for Creators */}
         {role === "creator" ? (
           <>
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
-                Headline
-              </label>
-              <input
-                type="text"
-                value={headline}
-                onChange={(e) => setHeadline(e.target.value)}
-                placeholder="Full-Stack MERN & Next.js Developer"
-                className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none"
-              />
+            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">
+                  Headline
+                </label>
+                <input
+                  type="text"
+                  value={headline}
+                  onChange={(e) => setHeadline(e.target.value)}
+                  placeholder="Full-Stack Developer"
+                  className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">
+                  Experience Level
+                </label>
+                <select
+                  value={experienceLevel}
+                  onChange={(e) => setExperienceLevel(e.target.value)}
+                  className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none"
+                >
+                  <option value="Fresher / Entry-Level">Fresher / Entry-Level</option>
+                  <option value="0-1 Years">0-1 Years</option>
+                  <option value="1-3 Years">1-3 Years</option>
+                  <option value="3+ Years">3+ Years</option>
+                </select>
+              </div>
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1">
@@ -510,6 +244,7 @@ function RegisterForm() {
                 type="text"
                 value={skillsInput}
                 onChange={(e) => setSkillsInput(e.target.value)}
+                placeholder="React, Node.js, MongoDB"
                 className="w-full rounded-xl border border-white/15 bg-slate-950 px-3.5 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none"
               />
             </div>

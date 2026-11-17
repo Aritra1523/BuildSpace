@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Layers, LogOut, Plus, ShieldCheck, User } from "lucide-react";
 import { useAuth } from "@/customHooks/profile/useProfile";
+import axios from "axios";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -14,10 +15,13 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await fetch(`${API_BASE}/api/auth/logout`, {
-        method: "POST",
-        credentials: "include", // Clears the HTTP-only cookies on backend
-      });
+      await axios.post(
+        `${API_BASE}/api/auth/logout`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
     } catch {}
 
     router.push("/login");
@@ -43,7 +47,7 @@ export default function Navbar() {
             <div className="flex items-center gap-3">
               {user.role === "creator" && (
                 <Link
-                  href="/projects/new"
+                  href="/explore?upload=1"
                   className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-violet-600/20 border border-violet-500/30 px-3 py-1.5 text-xs font-semibold text-violet-200 hover:bg-violet-600/30 transition"
                 >
                   <Plus className="h-3.5 w-3.5" />
@@ -51,19 +55,31 @@ export default function Navbar() {
                 </Link>
               )}
 
-              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-slate-900/80 px-3 py-1.5">
+              {/* FIXED: This is now a clickable Link to the user's profile! */}
+              <Link
+                href={
+                  user.role === "creator"
+                    ? `/creators/${user._id}`
+                    : "/recruiter"
+                }
+                className="flex items-center gap-2 rounded-xl border border-white/10 bg-slate-900/80 px-3 py-1.5 hover:border-violet-500/40 hover:bg-slate-900 transition group cursor-pointer"
+                title="View My Profile"
+              >
                 <img
-                  src={profile?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"}
+                  src={
+                    profile?.avatar ||
+                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"
+                  }
                   alt={profile?.name || "User"}
-                  className="h-6 w-6 rounded-full object-cover"
+                  className="h-6 w-6 rounded-full object-cover group-hover:ring-2 group-hover:ring-violet-500 transition"
                 />
-                <span className="text-xs font-bold text-white">
+                <span className="text-xs font-bold text-white group-hover:text-violet-300 transition">
                   {profile?.name || user.email.split("@")[0]}
                 </span>
                 <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-cyan-300">
                   {user.role}
                 </span>
-              </div>
+              </Link>
 
               <button
                 onClick={handleLogout}

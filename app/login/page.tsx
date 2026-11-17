@@ -1,185 +1,3 @@
-// "use client";
-
-// import { useState } from "react";
-// import { useRouter } from "next/navigation";
-// import { useForm } from "react-hook-form";
-// import { zodResolver } from "@hookform/resolvers/zod";
-// import {
-//   ArrowRight,
-//   Eye,
-//   EyeOff,
-//   LoaderCircle,
-//   Mail,
-//   LockKeyhole,
-// } from "lucide-react";
-
-// import { useAppDispatch, useAppSelector } from "@/redux/strore/hooks";
-// import { loginUser } from "@/redux/slice/auth/authSlice";
-// import { AuthShell } from "@/component/Auth/AuthShell";
-// import { LoginFormData, loginSchema } from "@/shema/authSchema/LoginSchema/Login";
-
-
-// export default function LoginPage() {
-//   const dispatch = useAppDispatch();
-//   const router = useRouter();
-//   const [showPassword, setShowPassword] = useState(false);
-
-//   const { status, error } = useAppSelector((state) => state.auth);
-//   const loading = status === "loading";
-
-//   const {
-//     register,
-//     handleSubmit,
-//     formState: { errors },
-//   } = useForm<LoginFormData>({
-//     resolver: zodResolver(loginSchema),
-//     defaultValues: {
-//       email: "",
-//       password: "",
-//     },
-//   });
-
-//   const onSubmit = async (data: LoginFormData) => {
-//     const result = await dispatch(
-//       loginUser({
-//         email: data.email.trim(),
-//         password: data.password,
-//       }),
-//     );
-
-//     if (loginUser.fulfilled.match(result)) {
-//       router.push("/explore");
-//     }
-//   };
-
-//   const inputClass =
-//     "w-full rounded-xl border border-white/10 bg-black/20 py-3 pl-10 pr-4 text-sm outline-none transition placeholder:text-slate-600 focus:border-violet-400/60 focus:ring-2 focus:ring-violet-500/10";
-
-//   return (
-//     <AuthShell mode="login">
-//       <div className="rounded-3xl border border-white/10 bg-[#0c1019]/90 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8">
-//         <div className="mb-7">
-//           <p className="text-sm font-semibold text-cyan-300">WELCOME BACK</p>
-//           <h2 className="mt-2 text-3xl font-bold tracking-tight">
-//             Log in to BuildSpace
-//           </h2>
-//           <p className="mt-2 text-sm leading-6 text-slate-400">
-//             Pick up where you left off and keep building.
-//           </p>
-//         </div>
-
-//         {error && (
-//           <div
-//             role="alert"
-//             className="mb-5 rounded-xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-200"
-//           >
-//             {error}
-//           </div>
-//         )}
-
-//         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-//           {/* Email */}
-//           <div>
-//             <label
-//               htmlFor="email"
-//               className="mb-2 block text-sm font-medium text-slate-300"
-//             >
-//               Email address
-//             </label>
-
-//             <div className="relative">
-//               <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-
-//               <input
-//                 id="email"
-//                 type="email"
-//                 autoComplete="email"
-//                 placeholder="you@example.com"
-//                 aria-invalid={!!errors.email}
-//                 {...register("email")}
-//                 className={inputClass}
-//               />
-//             </div>
-
-//             {errors.email && (
-//               <p className="mt-1.5 text-xs text-rose-300">
-//                 {errors.email.message}
-//               </p>
-//             )}
-//           </div>
-
-//           {/* Password */}
-//           <div>
-//             <label
-//               htmlFor="password"
-//               className="mb-2 block text-sm font-medium text-slate-300"
-//             >
-//               Password
-//             </label>
-
-//             <div className="relative">
-//               <LockKeyhole className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-
-//               <input
-//                 id="password"
-//                 type={showPassword ? "text" : "password"}
-//                 autoComplete="current-password"
-//                 placeholder="Enter your password"
-//                 aria-invalid={!!errors.password}
-//                 {...register("password")}
-//                 className={`${inputClass} pr-12`}
-//               />
-
-//               <button
-//                 type="button"
-//                 onClick={() => setShowPassword((value) => !value)}
-//                 aria-label={showPassword ? "Hide password" : "Show password"}
-//                 className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-slate-500 hover:text-slate-200"
-//               >
-//                 {showPassword ? (
-//                   <EyeOff className="h-4 w-4" />
-//                 ) : (
-//                   <Eye className="h-4 w-4" />
-//                 )}
-//               </button>
-//             </div>
-
-//             {errors.password && (
-//               <p className="mt-1.5 text-xs text-rose-300">
-//                 {errors.password.message}
-//               </p>
-//             )}
-//           </div>
-
-//           {/* Submit */}
-//           <button
-//             disabled={loading}
-//             type="submit"
-//             className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-950/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-//           >
-//             {loading && <LoaderCircle className="h-4 w-4 animate-spin" />}
-
-//             {loading ? "Signing in..." : "Log in"}
-
-//             {!loading && <ArrowRight className="h-4 w-4" />}
-//           </button>
-//         </form>
-
-//         <div className="my-6 flex items-center gap-3 text-xs text-slate-600">
-//           <span className="h-px flex-1 bg-white/10" />
-//           YOUR NEXT CHAPTER STARTS HERE
-//           <span className="h-px flex-1 bg-white/10" />
-//         </div>
-
-//         <p className="text-center text-xs leading-5 text-slate-500">
-//           Your account session is managed with HTTP-only cookies.
-//         </p>
-//       </div>
-//     </AuthShell>
-//   );
-// }
-
-
 "use client";
 
 import React, { useState, Suspense } from "react";
@@ -265,15 +83,16 @@ function LoginForm() {
       localStorage.setItem("buildspace_user", JSON.stringify(user));
       localStorage.setItem("buildspace_profile", JSON.stringify(profile));
 
-      const destination = getPostAuthRedirect({
-        role: user.role,
-        isNewUser: false,
-        callbackUrl,
-      });
-
-      router.push(destination);
-    } catch (err: any) {
-      setError(err.message || "Authentication failed. Please check your credentials.");
+      if (callbackUrl) {
+        router.push(callbackUrl);
+      } else if (user.role === "recruiter") {
+        router.push("/recruiter");
+      } else {
+        router.push("/explore");
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Authentication failed. Please check your credentials.";
+      setError(message || "Authentication failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }
@@ -314,19 +133,17 @@ function LoginForm() {
               setSelectedRole("creator");
               setError(null);
             }}
-            className={`relative flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-xs font-semibold transition ${
-              selectedRole === "creator"
-                ? "border-violet-500 bg-violet-500/20 text-white shadow-lg shadow-violet-600/20"
-                : "border-white/10 bg-slate-950/60 text-slate-400 hover:border-white/20 hover:text-slate-200"
-            }`}
+            className={`relative flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-xs font-semibold transition ${selectedRole === "creator"
+              ? "border-violet-500 bg-violet-500/20 text-white shadow-lg shadow-violet-600/20"
+              : "border-white/10 bg-slate-950/60 text-slate-400 hover:border-white/20 hover:text-slate-200"
+              }`}
           >
             {selectedRole === "creator" && (
               <CheckCircle2 className="absolute right-2 top-2 h-3.5 w-3.5 text-violet-400" />
             )}
             <Code2
-              className={`h-5 w-5 ${
-                selectedRole === "creator" ? "text-violet-400" : "text-slate-500"
-              }`}
+              className={`h-5 w-5 ${selectedRole === "creator" ? "text-violet-400" : "text-slate-500"
+                }`}
             />
             <span>Creator</span>
           </button>
@@ -337,19 +154,17 @@ function LoginForm() {
               setSelectedRole("recruiter");
               setError(null);
             }}
-            className={`relative flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-xs font-semibold transition ${
-              selectedRole === "recruiter"
-                ? "border-cyan-500 bg-cyan-500/20 text-white shadow-lg shadow-cyan-600/20"
-                : "border-white/10 bg-slate-950/60 text-slate-400 hover:border-white/20 hover:text-slate-200"
-            }`}
+            className={`relative flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-xs font-semibold transition ${selectedRole === "recruiter"
+              ? "border-cyan-500 bg-cyan-500/20 text-white shadow-lg shadow-cyan-600/20"
+              : "border-white/10 bg-slate-950/60 text-slate-400 hover:border-white/20 hover:text-slate-200"
+              }`}
           >
             {selectedRole === "recruiter" && (
               <CheckCircle2 className="absolute right-2 top-2 h-3.5 w-3.5 text-cyan-400" />
             )}
             <Briefcase
-              className={`h-5 w-5 ${
-                selectedRole === "recruiter" ? "text-cyan-400" : "text-slate-500"
-              }`}
+              className={`h-5 w-5 ${selectedRole === "recruiter" ? "text-cyan-400" : "text-slate-500"
+                }`}
             />
             <span>Recruiter</span>
           </button>
@@ -360,19 +175,17 @@ function LoginForm() {
               setSelectedRole("admin");
               setError(null);
             }}
-            className={`relative flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-xs font-semibold transition ${
-              selectedRole === "admin"
-                ? "border-emerald-500 bg-emerald-500/20 text-white shadow-lg shadow-emerald-600/20"
-                : "border-white/10 bg-slate-950/60 text-slate-400 hover:border-white/20 hover:text-slate-200"
-            }`}
+            className={`relative flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-xs font-semibold transition ${selectedRole === "admin"
+              ? "border-emerald-500 bg-emerald-500/20 text-white shadow-lg shadow-emerald-600/20"
+              : "border-white/10 bg-slate-950/60 text-slate-400 hover:border-white/20 hover:text-slate-200"
+              }`}
           >
             {selectedRole === "admin" && (
               <CheckCircle2 className="absolute right-2 top-2 h-3.5 w-3.5 text-emerald-400" />
             )}
             <ShieldCheck
-              className={`h-5 w-5 ${
-                selectedRole === "admin" ? "text-emerald-400" : "text-slate-500"
-              }`}
+              className={`h-5 w-5 ${selectedRole === "admin" ? "text-emerald-400" : "text-slate-500"
+                }`}
             />
             <span>Admin</span>
           </button>
@@ -406,8 +219,8 @@ function LoginForm() {
                 selectedRole === "recruiter"
                   ? "recruiter@demo.dev"
                   : selectedRole === "admin"
-                  ? "admin@demo.dev"
-                  : "aritra@demo.dev"
+                    ? "admin@demo.dev"
+                    : "aritra@demo.dev"
               }
               className="w-full rounded-xl border border-white/15 bg-slate-950 py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-slate-600 focus:border-violet-500 focus:outline-none"
             />
